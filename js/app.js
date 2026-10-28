@@ -40,6 +40,97 @@ function drawQrCodeOnContext(ctx, elementId, x, y, size) {
 }
 
 // ============================================================================
+// HÀM TẠO NỘI DUNG DXF CHUẨN TRỰC TIẾP (ĐẢM BẢO KHÔNG BAO GIỜ TRỐNG RỖNG)
+// ============================================================================
+function buildMasterDxfContent(g, item, plates, ruleCheck) {
+  let lines = [
+    "0", "SECTION",
+    "2", "HEADER",
+    "0", "ENDSEC",
+    "0", "SECTION",
+    "2", "TABLES",
+    "0", "TABLE",
+    "2", "LAYER",
+    "0", "ENDTAB",
+    "0", "ENDSEC",
+    "0", "SECTION",
+    "2", "ENTITIES"
+  ];
+
+  // Vẽ khung chữ nhật phủ bì chính (Layout chính)
+  lines.push(
+    "0", "LWPOLYLINE",
+    "8", "0",
+    "90", "4",
+    "70", "1",
+    "10", "0.0", "20", "0.0",
+    "10", String(g.L), "20", "0.0",
+    "10", String(g.L), "20", String(g.W),
+    "10", "0.0", "20", String(g.W)
+  );
+
+  // Vẽ các vách dọc (VD)
+  g.vWalls.forEach(wx => {
+    lines.push(
+      "0", "LINE",
+      "8", "VD",
+      "10", String(wx), "20", String(g.offY + g.bY),
+      "11", String(wx), "21", String(g.W - g.offY - g.bY)
+    );
+  });
+
+  // Vẽ các vách ngang (VN)
+  g.hWalls.forEach(wy => {
+    lines.push(
+      "0", "LINE",
+      "8", "VN",
+      "10", String(g.offX + g.bX), "20", String(wy),
+      "11", String(g.L - g.offX - g.bX), "21", String(wy)
+    );
+  });
+
+  // Vẽ chi tiết các tấm vách tách rời ở cột bên phải
+  let offsetXPos = g.L + 550;
+  plates.forEach((p, idx) => {
+    let py = idx * 300; // Khoảng cách giữa các tấm
+    // Khung phôi tấm vách
+    lines.push(
+      "0", "LWPOLYLINE",
+      "8", p.shortType,
+      "90", "4",
+      "70", "1",
+      "10", String(offsetXPos), "20", String(py),
+      "10", String(offsetXPos + p.length), "20", String(py),
+      "10", String(offsetXPos + p.length), "20", String(py + p.height),
+      "10", String(offsetXPos), "20", String(py + p.height)
+    );
+
+    // Vẽ rãnh đan trên tấm
+    p.slots.forEach(sc => {
+      let sx = offsetXPos + sc - p.slotW / 2;
+      let sy = p.cutFrom === "top" ? py : (py + p.height - p.slotDepth);
+      lines.push(
+        "0", "LWPOLYLINE",
+        "8", "SLOTS",
+        "90", "4",
+        "70", "1",
+        "10", String(sx), "20", String(sy),
+        "10", String(sx + p.slotW), "20", String(sy),
+        "10", String(sx + p.slotW), "20", String(sy + p.slotDepth),
+        "10", String(sx), "20", String(sy + p.slotDepth)
+      );
+    });
+  });
+
+  lines.push(
+    "0", "ENDSEC",
+    "0", "EOF"
+  );
+
+  return lines.join("\n");
+}
+
+// ============================================================================
 // MODULE: js/app.js
 // Bộ điều khiển chính của ứng dụng THÔNG SỐ VÁCH CAD - ISO STANDARD PRO (v3)
 // ============================================================================
@@ -81,7 +172,6 @@ function checkExportAuth() {
   return true;
 }
 
-// HÀM KÍCH HOẠT KHÓA TOÀN DIỆN (Ẩn công cụ, hiện đồng hồ trên view không cần alert)
 function triggerDRMLockdown() {
   window.APP_STATE.isAuthorized = false;
   window.APP_STATE.canExport = false;
@@ -236,7 +326,7 @@ function renderOrientationMatrix() {
         </button>
         ${
           ev.feasible && ev.maxTotal !== ev.bestTotal
-            ? `<button class="btn-apply-max py-1 px-2 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 transition" title="Thử xếp tối đa số ô vật lý" ${!window.APP_STATE.isAuthorized ? "disabled" : ""}>
+            ? `<button class="btn-apply-max py-1 px-2 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 transition" title="Thử xếp tối đa số ô vật lý">
                  Max ${ev.maxTotal} ô
                </button>`
             : ""
@@ -1224,7 +1314,7 @@ window.addEventListener("DOMContentLoaded", () => {
            if(_0xauth === 2) break;
         }
 
-        // Nếu file mẫu hoặc file không có chữ ký đúng -> Khóa hoàn toàn, không hiện alert mà đếm ngược trên view
+        // Nếu file mẫu hoặc file không có chữ ký đúng -> Khóa hoàn toàn, không hiện alert
         if (_0xauth === 0) {
           triggerDRMLockdown();
         } else {
@@ -1369,9 +1459,37 @@ function snapPx(val) {
 }
 
 function renderMainCanvas() {
-  if (window.APP_STATE.viewMode === "3d") {
+  const is3DMode = (window.APP_STATE.viewMode === "3d");
+
+  // XỬ LÝ CHẾ ĐỘ XEM 3D HOẶC 2D
+  if (is3DMode) {
     if (typeof rebuild3DScene === "function") rebuild3DScene();
+    
+    // Nếu chưa được cấp quyền (sai mã), hiển thị thông báo và đồng hồ chìm trực tiếp trên khung 3D container
+    const threeHolder = document.getElementById("threeCanvasHolder");
+    if (threeHolder) {
+      let overlay3d = document.getElementById("drm3dOverlay");
+      if (!window.APP_STATE.isAuthorized) {
+        if (!overlay3d) {
+          overlay3d = document.createElement("div");
+          overlay3d.id = "drm3dOverlay";
+          overlay3d.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,23,42,0.82);z-index:99;pointer-events:none;backdrop-filter:blur(4px);";
+          threeHolder.style.position = "relative";
+          threeHolder.appendChild(overlay3d);
+        }
+        overlay3d.innerHTML = `
+          <div style="font-weight:900;font-size:28px;color:#ef4444;text-align:center;text-shadow:0 2px 10px rgba(0,0,0,0.8);margin-bottom:10px;padding:0 20px;">VUI LÒNG TẢI FILE THÔNG TIN CẦN LAYOUT VÁCH</div>
+          <div style="font-weight:900;font-size:64px;color:#facc15;text-shadow:0 2px 15px rgba(0,0,0,0.9);">00:${String(window.APP_STATE.countdownSecs).padStart(2, '0')}</div>
+        `;
+      } else if (overlay3d) {
+        overlay3d.remove();
+      }
+    }
     return;
+  } else {
+    // Nếu chuyển về 2D, dọn dẹp overlay 3D nếu có
+    const overlay3d = document.getElementById("drm3dOverlay");
+    if (overlay3d) overlay3d.remove();
   }
 
   const canvas = document.getElementById("cadCanvas");
@@ -1706,7 +1824,7 @@ function renderMainCanvas() {
     drawQrCodeOnContext(ctx, "authorQr", qrAuthorX, qrAuthorY, qrSize);
   }
   
-  // VẼ LỚP CẢNH BÁO BẢN QUYỀN CHÌM DƯỚI BẢN VẼ / TRÊN MÀN HÌNH VIEW KHI KHÔNG HỢP LỆ
+  // VẼ LỚP CẢNH BÁO BẢN QUYỀN CHÌM DƯỚI BẢN VẼ TRÊN CANVAS 2D
   if (!window.APP_STATE.isAuthorized) {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
