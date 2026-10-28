@@ -292,6 +292,8 @@ function rebuild3DScene() {
   }
 
   const explodeVal = parseFloat(document.getElementById("rng_explode3D")?.value) || 0;
+  vdGroup.visible = document.getElementById("chk_showVD")?.checked !== false;
+  vnGroup.visible = document.getElementById("chk_showVN")?.checked !== false;
   apply3DExplodeOffset(explodeVal);
 }
 

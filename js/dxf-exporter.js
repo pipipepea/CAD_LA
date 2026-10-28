@@ -116,7 +116,7 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
       pp.x,
       pp.topY + 10,
       8.5,
-      `${pp.index}. MA VACH: ${p.code} (${p.title}) - SL: ${p.qty} TAM | KT PHOI: ${p.length.toFixed(1)} x ${p.height.toFixed(1)} x ${p.thick}mm`,
+      `${pp.index}. MA VACH: ${p.code} (${p.title}) - SL: ${p.qty} TAM`,
       layerName,
       p.aciColor,
       0
@@ -143,7 +143,7 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
       pp.x,
       bottomNoteY,
       7.2,
-      `DAI = ${p.length.toFixed(1)}mm | CAO = ${p.height.toFixed(1)}mm | ${p.slots.length} RANH (${p.slotW.toFixed(2)} x ${p.slotDepth.toFixed(1)}mm)`,
+      `DAI = ${p.length.toFixed(1)}mm | CAO = ${p.height.toFixed(1)}mm | KT PHOI: ${p.length.toFixed(1)}x${p.height.toFixed(1)}x${p.thick}mm | ${p.slots.length} RANH (${p.slotW.toFixed(2)} x ${p.slotDepth.toFixed(1)}mm)`,
       layerName,
       p.aciColor,
       0

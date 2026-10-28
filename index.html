@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📐 THÔNG SỐ VÁCH CAD — ISO STANDARD PRO</title>
   <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="./assets/logo.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,15 +16,17 @@
 <body class="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
 
   <!-- FLOATING QUICK-PREVIEW TOOLTIP WHEN HOVERING OVER ANY EXCEL ROW -->
-  <div id="rowHoverTooltip" class="hidden"></div>
+  <div id="rowHoverTooltip" class="hidden"><button type="button" id="closePartPopup" aria-label="Đóng thông tin sản phẩm" onclick="closePartPopup()">×</button><div id="partPopupContent"></div></div>
 
   <!-- HEADER STUDIO -->
   <header class="sticky top-0 z-40 cad-panel border-b border-slate-800/90 px-4 py-2.5 shadow-2xl">
     <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-3">
       <!-- Animated Vector Logo & Brand -->
       <div class="flex items-center gap-3">
-        <div class="relative w-11 h-11 rounded-xl bg-slate-950 border border-sky-500/50 flex items-center justify-center logo-glow overflow-hidden">
-          <img src="./assets/logo.svg" alt="LayoutCAD Pro Logo" class="w-9 h-9 object-contain" />
+        <div class="relative w-11 h-11 rounded-xl bg-slate-950 border border-sky-500/50 flex items-center justify-center logo-glow overflow-hidden shadow-lg shadow-sky-500/20">
+          <svg class="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+          </svg>
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -62,6 +64,10 @@
 
         <button onclick="exportMasterDXF()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-lg transition">
           📐 Xuất AutoCAD (.DXF)
+        </button>
+
+        <button onclick="export3DSTEP()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg transition">
+          ⚙️ Xuất 3D CAD (.STEP)
         </button>
       </div>
     </div>
@@ -367,16 +373,19 @@
 
         <div class="pt-1 border-t border-slate-800 grid grid-cols-2 gap-1.5">
           <button onclick="exportMasterDXF()" class="py-2 px-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-[11px] transition">
-            📐 TẢI .DXF
+            📐 TẢI 2D .DXF
           </button>
-          <button onclick="exportMasterPNG()" class="py-2 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] transition">
-            🖼️ TẢI .PNG
+          <button onclick="export3DSTEP()" class="py-2 px-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-[11px] transition">
+            ⚙️ TẢI 3D .STEP
           </button>
           <button onclick="exportBomExcel()" class="py-2 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition">
             📊 BOM .XLSX
           </button>
-          <button onclick="export3DSTL()" class="py-2 px-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] transition">
-            🧊 TẢI 3D .STL
+          <button onclick="exportMasterPNG()" class="col-span-2 py-1.5 px-2 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white font-bold text-[11px] transition">
+            🖼️ TẢI ẢNH BẢN VẼ TỔNG HỢP (.PNG - Zoom 170%)
+          </button>
+          <button onclick="exportLayoutOnlyPNG()" class="col-span-2 py-1.5 px-2 rounded-lg bg-teal-600/80 hover:bg-teal-500 text-white font-bold text-[11px] transition">
+            🖼️ TẢI ẢNH MẶT BẰNG 2D (.PNG)
           </button>
         </div>
       </div>
@@ -472,6 +481,13 @@
             <input id="chk_showWallCodes" type="checkbox" checked onchange="updateUIAndRender()" class="accent-amber-400" />
             <span>Mã Vách</span>
           </label>
+          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer"><input id="chk_showVD" type="checkbox" checked onchange="updateUIAndRender()" class="accent-yellow-400"/><span>Vách dọc</span></label>
+          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer"><input id="chk_showVN" type="checkbox" checked onchange="updateUIAndRender()" class="accent-pink-400"/><span>Vách ngang</span></label>
+          <div class="flex items-center gap-1 bg-slate-950 px-1.5 py-1 rounded-lg border border-slate-800">
+            <button type="button" class="wall-view-btn" onclick="setWallView('all')">Tất cả</button>
+            <button type="button" class="wall-view-btn" onclick="setWallView('vd')">Chỉ VD</button>
+            <button type="button" class="wall-view-btn" onclick="setWallView('vn')">Chỉ VN</button>
+          </div>
           <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer">
             <input id="chk_showBoxIn" type="checkbox" checked onchange="updateUIAndRender()" class="accent-sky-400" />
             <span>Lòng Box In</span>
@@ -485,9 +501,22 @@
         </div>
       </div>
 
-      <!-- 2D SUPER-HIDPI 2.75x VECTOR CANVAS -->
-      <div id="canvasContainer" class="relative flex-1 min-h-[620px] rounded-2xl viewport-autocad border border-slate-800 overflow-hidden cursor-grab active:cursor-grabbing shadow-2xl">
-        <canvas id="cadCanvas" class="w-full h-full block"></canvas>
+      <div id="measureToolbar" class="cad-panel rounded-xl p-2 flex flex-wrap items-center gap-2 text-xs">
+<button id="measureToggle" type="button" onclick="toggleMeasure()" class="touch-action-btn">📐 Tạo DIM</button>
+<button id="confirmDimPoint1" type="button" onclick="confirmDimPoint(1)" class="touch-action-btn dim-confirm-btn" disabled>① Xác nhận điểm 1</button>
+<button id="confirmDimPoint2" type="button" onclick="confirmDimPoint(2)" class="touch-action-btn dim-confirm-btn" disabled>② Điểm 2</button>
+<button id="confirmDimPlacement" type="button" onclick="confirmDimPlacement()" class="touch-action-btn dim-confirm-btn" disabled>↵ Đặt DIM</button>
+<label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><span>Kiểu DIM</span><select id="dimMode" class="bg-slate-900 text-sky-200 rounded px-1 py-1"><option value="aligned">Thẳng 2 điểm</option><option value="horizontal">Ngang</option><option value="vertical">Dọc</option></select></label>
+<label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimSnap" type="checkbox" checked class="accent-sky-400"><span>Object Snap</span></label>
+<label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimVisibleToggle" type="checkbox" checked onchange="setDimensionsVisible(this.checked)" class="accent-emerald-400"><span>Hiện DIM</span></label>
+<button type="button" onclick="undoMeasure()" class="touch-action-btn">↶ Xóa DIM cuối</button>
+<button type="button" onclick="clearMeasures()" class="touch-action-btn">🗑 Xóa tất cả</button>
+<button id="applyWallUpdate" type="button" onclick="applyWallUpdate()" class="touch-action-btn border-amber-400 text-amber-200">↻ Cập nhật vách</button>
+<span id="measureInfo" class="text-emerald-300" aria-live="polite">Desktop: chọn điểm 1 → Space → điểm 2 → Space → vị trí đặt DIM → Space.</span>
+</div>
+<!-- 2D SUPER-HIDPI 2.75x VECTOR CANVAS -->
+      <div id="canvasContainer" class="relative h-[640px] min-h-[620px] max-h-[680px] rounded-2xl viewport-autocad border border-slate-800 overflow-hidden cursor-grab active:cursor-grabbing shadow-2xl">
+        <canvas id="cadCanvas" class="absolute inset-0 w-full h-full block"></canvas><canvas id="measureOverlay" class="absolute inset-0 w-full h-full" style="pointer-events:auto;touch-action:none"></canvas>
         <div class="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] mono text-slate-400 pointer-events-none">
           <span id="zoomStatus">Zoom: 76% • Super-HiDPI 2.75x</span>
         </div>
@@ -520,8 +549,8 @@
             <button onclick="set3DCameraPreset('iso')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Iso 3D</button>
             <button onclick="set3DCameraPreset('top')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Mặt Trên</button>
             <button onclick="set3DCameraPreset('front')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Mặt Trước</button>
-            <button onclick="export3DSTL()" class="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold">
-              🧊 Xuất 3D .STL
+            <button onclick="export3DSTEP()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold">
+              ⚙️ Xuất 3D .STEP
             </button>
           </div>
         </div>
@@ -538,6 +567,11 @@
           </select>
         </div>
         <div id="platesDetailGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+    <section class="cad-panel rounded-xl p-3 flex flex-wrap items-center gap-3" aria-label="QR bản vẽ và tác giả">
+      <div class="flex items-center gap-2"><div id="drawingQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div><div class="text-xs"><b class="text-sky-300">QR dữ liệu bản vẽ</b><div class="text-slate-400">Quét để lưu thông số và truy xuất lại dữ liệu</div></div></div>
+      <div class="flex items-center gap-2"><div id="authorQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div><div class="text-xs"><b class="text-amber-300">Tác giả</b><div class="text-slate-300">Nguyễn Thị Minh Thư</div><div class="text-slate-400">“người con Nam Bộ 🤞”</div></div></div>
+      <button type="button" class="touch-action-btn" onclick="downloadDrawingMetadata()">Tải JSON dữ liệu</button>
+    </section>
       </div>
 
     </section>
@@ -546,7 +580,9 @@
   <script src="./js/excel-parser.js"></script>
   <script src="./js/cad-renderer.js"></script>
   <script src="./js/dxf-exporter.js"></script>
+  <script src="./js/step-exporter.js"></script>
   <script src="./js/viewer-3d.js"></script>
   <script src="./js/app.js"></script>
+  <script src="./js/touch-tools.js"></script>
 </body>
 </html>

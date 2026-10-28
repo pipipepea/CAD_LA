@@ -1,7 +1,47 @@
 // ============================================================================
+// HÀM XỬ LÝ MÃ HÓA UTF-8 & KẾT XUẤT QR CODE TRỰC TIẾP LÊN CANVAS BẢN VẼ
+// ============================================================================
+function toUtf8ByteString(str) {
+  try {
+    return unescape(encodeURIComponent(str));
+  } catch (_) {
+    return str;
+  }
+}
+
+function drawQrCodeOnContext(ctx, elementId, x, y, size) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  if (!el.querySelector("canvas") && !el.querySelector("img")) {
+    if (typeof window.refreshDrawingQRCodes === "function") {
+      window.refreshDrawingQRCodes();
+    }
+  }
+
+  const cvs = el.querySelector("canvas");
+  const img = el.querySelector("img");
+
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x - 4, y - 4, size + 8, size + 8);
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(x - 4, y - 4, size + 8, size + 8);
+
+  if (cvs && cvs.width > 0 && cvs.height > 0) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(cvs, x, y, size, size);
+  } else if (img && img.complete && img.naturalWidth > 0) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, x, y, size, size);
+  }
+  ctx.restore();
+}
+
+// ============================================================================
 // MODULE: js/app.js
 // Bộ điều khiển chính của ứng dụng THÔNG SỐ VÁCH CAD - ISO STANDARD PRO (v3)
-// Hỗ trợ Tự động Xoay 6 Tư Thế 3D (Đứng / Dọc / Đặt nằm phẳng) & Tên file chuẩn
 // ============================================================================
 
 window.APP_STATE = {
@@ -17,9 +57,9 @@ window.APP_STATE = {
   isPanning: false,
   startPanX: 0,
   startPanY: 0,
-  viewMode: "master", // 'master' | 'layout' | '3d'
-  lineWeightMode: "hairline", // 'hairline' | 'standard' | 'bold'
-  bgTheme: "autocad", // 'autocad' | 'blueprint' | 'paper'
+  viewMode: "master",
+  lineWeightMode: "hairline",
+  bgTheme: "autocad",
   colors: {
     vd: "#facc15",
     vn: "#f472b6",
@@ -27,8 +67,61 @@ window.APP_STATE = {
     bn: "#fb923c",
     slot: "#f87171",
     frame: "#38bdf8"
-  }
+  },
+  isAuthorized: true,    
+  canExport: true,       
+  countdownSecs: 50,
+  countdownTimer: null
 };
+
+function checkExportAuth() {
+  if (window.APP_STATE.canExport === false) {
+    return false;
+  }
+  return true;
+}
+
+// HÀM KÍCH HOẠT KHÓA TOÀN DIỆN (Ẩn công cụ, hiện đồng hồ trên view không cần alert)
+function triggerDRMLockdown() {
+  window.APP_STATE.isAuthorized = false;
+  window.APP_STATE.canExport = false;
+  window.APP_STATE.countdownSecs = 50;
+  
+  const formArea = document.querySelector("main > aside");
+  if (formArea) {
+    formArea.style.pointerEvents = "none";
+    formArea.style.opacity = "0.2";
+  }
+  
+  const excelInput = document.getElementById("excelFileInput");
+  if (excelInput && excelInput.parentElement) {
+    excelInput.parentElement.style.pointerEvents = "auto";
+    excelInput.parentElement.style.opacity = "1";
+  }
+
+  const buttons = document.querySelectorAll("button");
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    btn.style.cursor = "not-allowed";
+  });
+
+  if (window.APP_STATE.countdownTimer) clearInterval(window.APP_STATE.countdownTimer);
+  window.APP_STATE.countdownTimer = setInterval(() => {
+    window.APP_STATE.countdownSecs--;
+    renderMainCanvas(); 
+    
+    if (window.APP_STATE.countdownSecs <= 0) {
+      clearInterval(window.APP_STATE.countdownTimer);
+      if (Math.random() < 0.1) {
+        window.location.href = "https://pipipepea.github.io/MYCARD/";
+      } else {
+        window.location.href = "https://pipipepea.github.io/PHUC-GAME/";
+      }
+    }
+  }, 1000);
+  
+  renderMainCanvas();
+}
 
 function getMasterFileBaseName() {
   const g = computeCadGeometry();
@@ -85,7 +178,6 @@ function toggleOrientationMatrix() {
   if (btn) btn.textContent = window.APP_STATE.orientationMatrixOpen ? "▲ Ẩn bảng xoay 6 tư thế" : "▼ Mở bảng xoay 6 tư thế 3D";
 }
 
-// Render 6-Orientation Rotation Matrix (Standing, Vertical, Laying Flat & 90° Rotations)
 function renderOrientationMatrix() {
   const container = document.getElementById("orientationMatrixGrid");
   if (!container) return;
@@ -139,12 +231,12 @@ function renderOrientationMatrix() {
           ev.feasible
             ? "bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/40"
             : "bg-slate-800 text-slate-500 cursor-not-allowed"
-        }">
+        }" ${!window.APP_STATE.isAuthorized ? "disabled" : ""}>
           🔄 Thử Layout (${ev.bestNx}×${ev.bestNy} = ${ev.bestTotal} ô)
         </button>
         ${
           ev.feasible && ev.maxTotal !== ev.bestTotal
-            ? `<button class="btn-apply-max py-1 px-2 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 transition" title="Thử xếp tối đa số ô vật lý">
+            ? `<button class="btn-apply-max py-1 px-2 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 transition" title="Thử xếp tối đa số ô vật lý" ${!window.APP_STATE.isAuthorized ? "disabled" : ""}>
                  Max ${ev.maxTotal} ô
                </button>`
             : ""
@@ -153,11 +245,11 @@ function renderOrientationMatrix() {
     `;
 
     const btnStd = card.querySelector(".btn-apply-std");
-    if (btnStd && ev.feasible) {
+    if (btnStd && ev.feasible && window.APP_STATE.isAuthorized) {
       btnStd.onclick = () => applyOrientationEvaluation(item, ev, false);
     }
     const btnMax = card.querySelector(".btn-apply-max");
-    if (btnMax && ev.feasible) {
+    if (btnMax && ev.feasible && window.APP_STATE.isAuthorized) {
       btnMax.onclick = () => applyOrientationEvaluation(item, ev, true);
     }
 
@@ -193,7 +285,6 @@ function applyOrientationEvaluation(item, ev, useMax) {
   updateUIAndRender();
 }
 
-// Quick swap footprint X <-> Y (Rotate product 90 deg in the horizontal plane)
 function rotateActiveProduct90() {
   const fp = window.APP_STATE.activeFootprint;
   if (!fp) return;
@@ -206,7 +297,6 @@ function rotateActiveProduct90() {
   updateUIAndRender();
 }
 
-// Floating Hover Diagnostic Preview when pointing mouse at any Excel row
 function showRowHoverPreview(evt, idx) {
   const item = window.APP_STATE.items[idx];
   const tooltip = document.getElementById("rowHoverTooltip");
@@ -246,7 +336,6 @@ function showRowHoverPreview(evt, idx) {
     `;
   }
 
-  // Mini 6-Orientation Summary inside Hover Tooltip
   let ori6Html = "";
   if (summary.all6) {
     ori6Html = `
@@ -291,6 +380,7 @@ function showRowHoverPreview(evt, idx) {
   `;
 
   tooltip.classList.remove("hidden");
+  if (typeof enhancePartPopup === "function") enhancePartPopup(evt, idx);
   moveRowHoverPreview(evt);
 }
 
@@ -318,7 +408,7 @@ function moveRowHoverPreview(evt) {
 
 function hideRowHoverPreview() {
   const tooltip = document.getElementById("rowHoverTooltip");
-  if (tooltip) tooltip.classList.add("hidden");
+  if (tooltip && !window.partPopupPinned) tooltip.classList.add("hidden");
 }
 
 function computeCadGeometry() {
@@ -475,378 +565,64 @@ function getPlatesCatalog(g, item) {
   return plates;
 }
 
-function renderMainCanvas() {
-  if (window.APP_STATE.viewMode === "3d") {
-    if (typeof rebuild3DScene === "function") rebuild3DScene();
-    return;
-  }
+function computeMasterWorldLayout(g, item, plates) {
+  const rightColX = g.L + 550; 
+  let curPlateTopDown = 10; 
+  const platePlacements = [];
 
-  const canvas = document.getElementById("cadCanvas");
-  const container = document.getElementById("canvasContainer");
-  if (!canvas || !container) return;
+  plates.forEach((p, idx) => {
+    const minSpacing = p.slots.length > 1
+      ? Math.min(...p.slots.slice(1).map((s, i) => Math.abs(s - p.slots[i])))
+      : 999;
+    const rotateCoords = p.slots.length > 5 || minSpacing < 38;
+    const extraLabelSpace = rotateCoords ? 48 : 30;
+    const blockHeaderSpace = 28;
+    const blockFooterSpace = 180; 
 
-  const rect = container.getBoundingClientRect();
-  const dpr = Math.max(window.devicePixelRatio || 1, 2.75);
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
+    const topY = g.W - curPlateTopDown - blockHeaderSpace;
+    const botY = topY - p.height;
 
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.clearRect(0, 0, rect.width, rect.height);
-
-  const g = computeCadGeometry();
-  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
-  const plates = getPlatesCatalog(g, item);
-  const c = window.APP_STATE.colors;
-  const isPaper = window.APP_STATE.bgTheme === "paper";
-  const lineScale = window.APP_STATE.lineWeightMode === "hairline" ? 0.82 : window.APP_STATE.lineWeightMode === "bold" ? 1.45 : 1.08;
-
-  const masterLayout = computeMasterWorldLayout(g, item, plates);
-  const layoutOnlyLeftPad = 125;
-  const totalWorldW = window.APP_STATE.viewMode === "master" ? masterLayout.worldW : (g.L + layoutOnlyLeftPad + 85);
-  const totalWorldH = window.APP_STATE.viewMode === "master" ? masterLayout.worldH : (g.W + 170);
-
-  const baseScale = Math.min((rect.width - 60) / totalWorldW, (rect.height - 60) / totalWorldH);
-  const scale = Math.max(0.08, baseScale * window.APP_STATE.zoom);
-
-  const drawW = totalWorldW * scale;
-  const drawH = totalWorldH * scale;
-  const originX = (rect.width - drawW) / 2 + window.APP_STATE.panX + (window.APP_STATE.viewMode === "master" ? Math.abs(masterLayout.frameLeft) * scale : layoutOnlyLeftPad * scale);
-  const originY = (rect.height - drawH) / 2 + window.APP_STATE.panY + (window.APP_STATE.viewMode === "master" ? (masterLayout.frameTop - g.W) * scale : 75 * scale);
-
-  const toScreenX = (mmX) => originX + mmX * scale;
-  const toScreenY = (mmYFromTop) => originY + mmYFromTop * scale;
-
-  // Master Sheet Outer Frame
-  if (window.APP_STATE.viewMode === "master") {
-    const fx = snapPx(toScreenX(masterLayout.frameLeft));
-    const fy = snapPx(toScreenY(g.W - masterLayout.frameTop));
-    const fw = Math.round(masterLayout.worldW * scale);
-    const fh = Math.round(masterLayout.worldH * scale);
-
-    ctx.fillStyle = isPaper ? "rgba(255, 255, 255, 0.96)" : "rgba(6, 10, 20, 0.90)";
-    ctx.fillRect(fx, fy, fw, fh);
-
-    ctx.strokeStyle = isPaper ? "#475569" : "rgba(148, 163, 184, 0.45)";
-    ctx.lineWidth = 1.0 * lineScale;
-    ctx.strokeRect(fx, fy, fw, fh);
-
-    ctx.strokeStyle = c.frame;
-    ctx.lineWidth = 1.5 * lineScale;
-    ctx.strokeRect(fx + 6, fy + 6, fw - 12, fh - 12);
-  }
-
-  // Section I Header
-  ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
-  ctx.font = "800 12px 'JetBrains Mono', monospace";
-  ctx.textAlign = "left";
-  ctx.fillText(`I. MẶT BẰNG LAYOUT VÁCH NGĂN 2D (TỔNG: ${g.totalCells} Ô = ${g.nx}×${g.ny})`, toScreenX(0), toScreenY(-42));
-
-  // Optional Box In boundary
-  if (document.getElementById("chk_showBoxIn")?.checked && item) {
-    const diffX = (item.boxIn.L - g.L) / 2;
-    const diffY = (item.boxIn.W - g.W) / 2;
-    ctx.save();
-    ctx.strokeStyle = "rgba(16, 185, 129, 0.55)";
-    ctx.lineWidth = 1.1 * lineScale;
-    ctx.setLineDash([6, 4]);
-    ctx.strokeRect(
-      snapPx(toScreenX(-diffX)),
-      snapPx(toScreenY(-diffY)),
-      Math.round(item.boxIn.L * scale),
-      Math.round(item.boxIn.W * scale)
-    );
-    ctx.restore();
-  }
-
-  // Outer Partition Boundary (X = 0 to g.L, Y = 0 to g.W)
-  ctx.save();
-  ctx.strokeStyle = isPaper ? "#0369a1" : c.frame;
-  ctx.lineWidth = 1.8 * lineScale;
-  ctx.strokeRect(snapPx(toScreenX(0)), snapPx(toScreenY(0)), Math.round(g.L * scale), Math.round(g.W * scale));
-  ctx.restore();
-
-  // Offset Line
-  if (g.offX > 0 || g.offY > 0) {
-    ctx.save();
-    ctx.strokeStyle = isPaper ? "#64748b" : "#94a3b8";
-    ctx.lineWidth = 0.9 * lineScale;
-    ctx.setLineDash([4, 4]);
-    ctx.strokeRect(
-      snapPx(toScreenX(g.offX)),
-      snapPx(toScreenY(g.offY)),
-      Math.round((g.L - 2 * g.offX) * scale),
-      Math.round((g.W - 2 * g.offY) * scale)
-    );
-    ctx.restore();
-  }
-
-  // Cells & Product Footprints
-  const showPart = document.getElementById("chk_showPart")?.checked;
-  const fp = window.APP_STATE.activeFootprint;
-
-  for (let ix = 0; ix < g.nx; ix++) {
-    for (let iy = 0; iy < g.ny; iy++) {
-      const cx = g.offX + g.bX + ix * (g.cellX + g.tX);
-      const cy = g.offY + g.bY + iy * (g.cellY + g.tY);
-      const sx = toScreenX(cx);
-      const sy = toScreenY(cy);
-      const sw = g.cellX * scale;
-      const sh = g.cellY * scale;
-
-      if (showPart && fp) {
-        const fits = fp.x <= g.cellX + 0.05 && fp.y <= g.cellY + 0.05;
-        const pw = Math.min(fp.x, g.cellX) * scale;
-        const ph = Math.min(fp.y, g.cellY) * scale;
-        const px = sx + (sw - pw) / 2;
-        const py = sy + (sh - ph) / 2;
-
-        ctx.fillStyle = fits ? "rgba(16, 185, 129, 0.14)" : "rgba(239, 68, 68, 0.22)";
-        ctx.strokeStyle = fits ? "rgba(16, 185, 129, 0.65)" : "rgba(239, 68, 68, 0.85)";
-        ctx.lineWidth = 0.85 * lineScale;
-        ctx.fillRect(px, py, pw, ph);
-        ctx.strokeRect(snapPx(px), snapPx(py), Math.round(pw), Math.round(ph));
-      }
-
-      if (sw > 18 && sh > 11) {
-        const cellNum = iy * g.nx + ix + 1;
-        ctx.fillStyle = isPaper ? "#334155" : "rgba(226, 232, 240, 0.78)";
-        ctx.font = `600 ${Math.min(10, Math.max(7.5, Math.min(sw, sh) * 0.28))}px 'JetBrains Mono', monospace`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`#${cellNum}`, sx + sw / 2, sy + sh / 2);
-      }
-    }
-  }
-
-  const showWallCodes = document.getElementById("chk_showWallCodes")?.checked;
-
-  // Vertical Walls (VD)
-  ctx.save();
-  ctx.fillStyle = c.vd;
-  ctx.strokeStyle = isPaper ? "#854d0e" : "#fef08a";
-  ctx.lineWidth = 0.85 * lineScale;
-  g.vWalls.forEach((wx, idx) => {
-    const sx = snapPx(toScreenX(wx));
-    const sy = snapPx(toScreenY(g.offY + g.bY));
-    const sw = Math.max(1.5, g.tX * scale);
-    const sh = Math.round((g.W - 2 * (g.offY + g.bY)) * scale);
-    ctx.fillRect(sx, sy, sw, sh);
-    ctx.strokeRect(sx, sy, sw, sh);
-
-    if (showWallCodes) {
-      ctx.fillStyle = isPaper ? "#a16207" : c.vd;
-      ctx.font = "700 9px 'JetBrains Mono', monospace";
-      ctx.textAlign = "center";
-      ctx.fillText(`VD${idx + 1}`, sx + sw / 2, sy - 6);
-      ctx.fillStyle = c.vd;
-    }
-  });
-  ctx.restore();
-
-  // Horizontal Walls (VN) -> Labels pushed OUTSIDE the outer cyan boundary on the left
-  ctx.save();
-  ctx.fillStyle = c.vn;
-  ctx.strokeStyle = isPaper ? "#9d174d" : "#fbcfe8";
-  ctx.lineWidth = 0.85 * lineScale;
-  g.hWalls.forEach((wy, idx) => {
-    const sx = snapPx(toScreenX(g.offX + g.bX));
-    const sy = snapPx(toScreenY(wy));
-    const sw = Math.round((g.L - 2 * (g.offX + g.bX)) * scale);
-    const sh = Math.max(1.5, g.tY * scale);
-    ctx.fillRect(sx, sy, sw, sh);
-    ctx.strokeRect(sx, sy, sw, sh);
-
-    if (showWallCodes) {
-      const outerLeftX = snapPx(toScreenX(0));
-      ctx.save();
-      ctx.strokeStyle = isPaper ? "rgba(190, 24, 93, 0.45)" : "rgba(244, 114, 182, 0.45)";
-      ctx.setLineDash([2, 2]);
-      ctx.beginPath();
-      ctx.moveTo(outerLeftX - 8, sy + sh / 2);
-      ctx.lineTo(sx, sy + sh / 2);
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.fillStyle = isPaper ? "#be185d" : c.vn;
-      ctx.font = "700 9.5px 'JetBrains Mono', monospace";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.fillText(`VN${idx + 1}`, outerLeftX - 11, sy + sh / 2);
-      ctx.fillStyle = c.vn;
-    }
-  });
-  ctx.restore();
-
-  // Slot Intersections
-  ctx.fillStyle = c.slot;
-  g.vWalls.forEach(wx => {
-    g.hWalls.forEach(wy => {
-      ctx.fillRect(
-        snapPx(toScreenX(wx) - 1),
-        snapPx(toScreenY(wy) - 1),
-        Math.max(3, g.tX * scale + 2),
-        Math.max(3, g.tY * scale + 2)
-      );
+    platePlacements.push({
+      plate: p,
+      index: idx + 1,
+      x: rightColX,
+      topY,
+      botY,
+      width: p.length,
+      height: p.height,
+      rotateCoords
     });
+
+    curPlateTopDown += blockHeaderSpace + p.height + extraLabelSpace + blockFooterSpace;
   });
 
-  // Main Layout Dimensions
-  drawTechnicalArrow(ctx, toScreenX(0), toScreenY(0), toScreenX(g.L), toScreenY(0), c.frame, `DÀI PHỦ BÌ L = ${g.L.toFixed(1)} mm`, -22, lineScale);
-  const leftOutsideOffsetPx = Math.max(54, Math.min(82, 58 * scale + 24));
-  drawTechnicalArrow(ctx, toScreenX(0), toScreenY(0), toScreenX(0), toScreenY(g.W), c.frame, `RỘNG PHỦ BÌ W = ${g.W.toFixed(1)} mm`, leftOutsideOffsetPx, lineScale);
+  const sec1ShiftX = 260; 
+  const sec1ShiftY = 160; 
 
-  if (g.nx > 0 && g.cellX > 0) {
-    const cx0 = g.offX + g.bX;
-    drawTechnicalArrow(ctx, toScreenX(cx0), toScreenY(g.W), toScreenX(cx0 + g.cellX), toScreenY(g.W), c.vd, `Ô X = ${g.cellX.toFixed(1)}`, -22, lineScale);
-  }
-  if (g.ny > 0 && g.cellY > 0) {
-    const cy0 = g.offY + g.bY;
-    drawTechnicalArrow(ctx, toScreenX(g.L), toScreenY(cy0), toScreenX(g.L), toScreenY(cy0 + g.cellY), c.vn, `Ô Y = ${g.cellY.toFixed(1)}`, -26, lineScale);
-  }
+  const maxPlateW = plates.length > 0 ? Math.max(...plates.map(p => Math.max(p.length, 480 + p.slots.length * 24))) : 650;
+  const contentMaxW = Math.max(rightColX + maxPlateW, 1600);
+  const paddingX = Math.max(110, contentMaxW * 0.08);
 
-  // MASTER MODE: Column II (Plates) + Section III (Non-Overlapping Title Block)
-  if (window.APP_STATE.viewMode === "master") {
-    ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
-    ctx.font = "800 12px 'JetBrains Mono', monospace";
-    ctx.textAlign = "left";
-    ctx.fillText("II. BẢN VẼ TÁCH CHI TIẾT TỪNG TẤM VÁCH & RÃNH ĐAN (MÀU RIÊNG)", toScreenX(masterLayout.rightColX), toScreenY(-42));
+  const leftLowestY = -75;
+  const rightLowestY = g.W - curPlateTopDown;
+  const contentLowestY = Math.min(leftLowestY, rightLowestY);
 
-    masterLayout.platePlacements.forEach(pp => {
-      const p = pp.plate;
-      const px = snapPx(toScreenX(pp.x));
-      const py = snapPx(toScreenY(g.W - pp.topY));
-      const pw = Math.round(pp.width * scale);
-      const ph = Math.round(pp.height * scale);
+  const bomTopY = contentLowestY - 180;
+  const bomRowCount = Math.max(4, plates.length + 2);
+  const bomBoxH = 180 + bomRowCount * 24;
+  const bomBotY = bomTopY - bomBoxH;
 
-      ctx.fillStyle = p.color;
-      ctx.font = "700 10.5px 'JetBrains Mono', monospace";
-      ctx.textAlign = "left";
-      ctx.fillText(`■ ${pp.index}. MÃ VÁCH: ${p.code} (${p.title}) — SL: ${p.qty} TẤM | KT PHÔI: ${p.length.toFixed(1)}×${p.height.toFixed(1)}×${p.thick}mm`, px, py - (pp.rotateCoords ? 26 : 12));
+  const paddingY = Math.max(110, Math.abs(bomBotY) * 0.08);
 
-      ctx.fillStyle = p.color + "16";
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 1.5 * lineScale;
-      ctx.fillRect(px, py, pw, ph);
-      ctx.strokeRect(px, py, pw, ph);
+  const frameLeft = -sec1ShiftX - 150 - paddingX * 0.3; 
+  const frameRight = contentMaxW + paddingX;
+  const frameTop = g.W + sec1ShiftY + 130 + paddingY * 0.4;
+  const frameBottom = bomBotY - paddingY;
 
-      p.slots.forEach(sc => {
-        const sx = snapPx(toScreenX(pp.x + sc - p.slotW / 2));
-        const sw = Math.max(2, p.slotW * scale);
-        const sh = Math.round(p.slotDepth * scale);
-        const sy = p.cutFrom === "top" ? py : (py + ph - sh);
+  const bomX = -sec1ShiftX; 
+  const bomW = contentMaxW - bomX;
 
-        ctx.fillStyle = c.slot + "40";
-        ctx.strokeStyle = c.slot;
-        ctx.lineWidth = 1.05 * lineScale;
-        ctx.fillRect(sx, sy, sw, sh);
-        ctx.strokeRect(sx, sy, sw, sh);
-
-        const labelX = toScreenX(pp.x + sc);
-        ctx.fillStyle = isPaper ? "#b45309" : "#fde047";
-        ctx.font = "600 8.5px 'JetBrains Mono', monospace";
-
-        if (pp.rotateCoords) {
-          ctx.save();
-          const labelY = p.cutFrom === "top" ? (py - 4) : (py + ph + 4);
-          ctx.translate(labelX, labelY);
-          ctx.rotate(-Math.PI / 2);
-          ctx.textAlign = p.cutFrom === "top" ? "left" : "right";
-          ctx.textBaseline = "middle";
-          ctx.fillText(sc.toFixed(1), 0, 0);
-          ctx.restore();
-        } else {
-          ctx.textAlign = "center";
-          ctx.fillText(sc.toFixed(1), labelX, p.cutFrom === "top" ? (py - 4) : (py + ph + 10));
-        }
-      });
-
-      const dimOffset = pp.rotateCoords && p.cutFrom === "bottom" ? -28 : -16;
-      drawTechnicalArrow(
-        ctx,
-        px,
-        py + ph,
-        px + pw,
-        py + ph,
-        p.color,
-        `DÀI ${p.shortType} = ${p.length.toFixed(1)} mm (${p.slots.length} rãnh rộng ${p.slotW.toFixed(2)} × sâu ${p.slotDepth.toFixed(1)}mm)`,
-        dimOffset,
-        lineScale
-      );
-      drawTechnicalArrow(
-        ctx,
-        px + pw,
-        py,
-        px + pw,
-        py + ph,
-        p.color,
-        `CAO = ${p.height.toFixed(1)}`,
-        -20,
-        lineScale
-      );
-    });
-
-    // Section III: Non-Overlapping ISO Title Block & BOM Table
-    const bx = snapPx(toScreenX(0));
-    const by = snapPx(toScreenY(g.W - masterLayout.bomTopY));
-    const bw = Math.round(masterLayout.totalWidth * scale);
-    const bh = Math.round(masterLayout.bomBoxH * scale);
-
-    ctx.fillStyle = isPaper ? "rgba(241, 245, 249, 0.98)" : "rgba(10, 17, 32, 0.96)";
-    ctx.strokeStyle = c.frame;
-    ctx.lineWidth = 1.5 * lineScale;
-    ctx.fillRect(bx, by, bw, bh);
-    ctx.strokeRect(bx, by, bw, bh);
-
-    ctx.fillStyle = "rgba(56, 189, 248, 0.14)";
-    ctx.fillRect(bx, by, bw, 24);
-    ctx.beginPath();
-    ctx.moveTo(bx, snapPx(by + 24));
-    ctx.lineTo(bx + bw, snapPx(by + 24));
-    ctx.stroke();
-
-    const midX = snapPx(bx + bw * 0.44);
-    ctx.beginPath();
-    ctx.moveTo(midX, by);
-    ctx.lineTo(midX, by + bh);
-    ctx.stroke();
-
-    ctx.fillStyle = isPaper ? "#0369a1" : "#38bdf8";
-    ctx.font = "800 10.5px 'JetBrains Mono', monospace";
-    ctx.textAlign = "left";
-    ctx.fillText("III. THÔNG TIN SẢN PHẨM & QUY CÁCH ĐÓNG GÓI (ISO STANDARD)", bx + 12, by + 16);
-    ctx.fillText("BẢNG KÊ CHI TIẾT CÁC VÁCH NGĂN (MÃ VÁCH & MÀU RIÊNG)", midX + 12, by + 16);
-
-    const ruleCheck = checkTotalMatchesRule(g.totalCells, getRuleConfig());
-    ctx.fillStyle = isPaper ? "#0f172a" : "#f1f5f9";
-    ctx.font = "600 9.5px 'JetBrains Mono', monospace";
-    const infoLines = [
-      `• Mã hàng (Part Code): ${item ? item.partCode : "N/A"}   |   Khách hàng: ${item ? item.customer : "SECVN"}`,
-      `• Tên SP (Part Name) : ${item ? item.partName : "N/A"}`,
-      `• KT Sản phẩm (D×R×C): ${item ? `${item.pL} × ${item.pW} × ${item.pH} mm` : "N/A"} (${window.APP_STATE.activeFootprint?.label || ""})`,
-      `• KT Box Out / In    : Out ${item ? `${item.boxOut.L}×${item.boxOut.W}×${item.boxOut.H}` : ""} | In ${item ? `${item.boxIn.L}×${item.boxIn.W}×${item.boxIn.H} mm` : ""}`,
-      `• Quy cách Layout    : Phủ bì ${g.L}×${g.W}×H${g.hVD}mm | ${g.totalCells} ô (${g.nx}×${g.ny}) [${ruleCheck.text}]`,
-      `• Lọt lòng 1 ô (X×Y) : ${g.cellX.toFixed(2)} × ${g.cellY.toFixed(2)} mm | File: ${getMasterFileBaseName()}`
-    ];
-    infoLines.forEach((ln, idx) => {
-      ctx.fillText(ln, bx + 12, by + 42 + idx * 17);
-    });
-
-    plates.forEach((p, idx) => {
-      const ry = by + 44 + idx * 20;
-      ctx.fillStyle = p.color;
-      ctx.fillRect(midX + 12, ry - 8, 9, 9);
-      const slotListStr = p.slots.length > 0 ? p.slots.map(s => s.toFixed(1)).join(", ") : "Không cắt rãnh";
-      ctx.fillText(
-        `${p.code} (${p.shortType}) | KT: ${p.length.toFixed(1)}×${p.height.toFixed(1)}×${p.thick}mm | SL: ${p.qty} tấm | ${p.slots.length} rãnh: [${slotListStr}]`,
-        midX + 26,
-        ry
-      );
-    });
-  }
-
-  document.getElementById("zoomStatus").textContent = `Zoom: ${Math.round(window.APP_STATE.zoom * 100)}% • Super-HiDPI ${dpr.toFixed(2)}x`;
+  return { rightColX, platePlacements, bomTopY, bomBoxH, bomBotY, frameLeft, frameRight, frameTop, frameBottom, worldW: frameRight - frameLeft, worldH: frameTop - frameBottom, bomX, bomW };
 }
 
 function renderDetachedPlatesSection() {
@@ -883,6 +659,17 @@ function renderDetachedPlatesSection() {
   });
 }
 
+function setWallView(mode) {
+  const vd=document.getElementById("chk_showVD"), vn=document.getElementById("chk_showVN");
+  if(vd) vd.checked = mode !== "vn";
+  if(vn) vn.checked = mode !== "vd";
+  updateUIAndRender();
+  if(window.CAD_3D?.vdGroup) window.CAD_3D.vdGroup.visible=!!vd?.checked;
+  if(window.CAD_3D?.vnGroup) window.CAD_3D.vnGroup.visible=!!vn?.checked;
+  const info=document.getElementById("measureInfo");
+  if(info) info.textContent = mode === "vd" ? "Đang xem riêng vách dọc (VD)." : mode === "vn" ? "Đang xem riêng vách ngang (VN)." : "Đang xem tổng hợp vách dọc và vách ngang.";
+}
+
 function updateUIAndRender() {
   const g = computeCadGeometry();
   const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
@@ -899,7 +686,6 @@ function updateUIAndRender() {
   document.getElementById("res_wallsCount").textContent = `${g.vWallsCount} dọc (VD) × ${g.hWallsCount} ngang (VN)`;
   document.getElementById("res_cellDim").textContent = `${g.cellX.toFixed(2)} × ${g.cellY.toFixed(2)} mm`;
 
-  // Check if active product footprint fits inside current cell
   const fp = window.APP_STATE.activeFootprint;
   const fitStatusEl = document.getElementById("res_partFitBadge");
   if (fitStatusEl && fp && item) {
@@ -914,7 +700,6 @@ function updateUIAndRender() {
     }
   }
 
-  // Update live filename preview
   const fileBase = getMasterFileBaseName();
   const fnEl = document.getElementById("lbl_exportFilename");
   if (fnEl) fnEl.textContent = `${fileBase}.dxf`;
@@ -931,6 +716,7 @@ function updateUIAndRender() {
     }
   }
 
+  if (typeof window.refreshDrawingQRCodes === "function") window.refreshDrawingQRCodes();
   renderMainCanvas();
   renderDetachedPlatesSection();
 }
@@ -947,9 +733,10 @@ function renderExcelTable() {
     const tr = document.createElement("tr");
     tr.className = `cursor-pointer transition hover:bg-sky-500/15 ${idx === window.APP_STATE.selectedIndex ? "row-selected" : ""}`;
     tr.onclick = () => selectExcelItem(idx);
-    tr.onmouseenter = (e) => showRowHoverPreview(e, idx);
-    tr.onmousemove = (e) => moveRowHoverPreview(e);
+    tr.onmouseenter = (e) => { if (window.matchMedia("(hover:hover) and (pointer:fine)").matches) showRowHoverPreview(e, idx); };
+    tr.onmousemove = (e) => { if (!window.partPopupPinned) moveRowHoverPreview(e); };
     tr.onmouseleave = () => hideRowHoverPreview();
+    tr.addEventListener("click", (e) => { if (window.matchMedia("(hover:none), (pointer:coarse)").matches) { showRowHoverPreview({clientX:window.innerWidth/2,clientY:window.innerHeight/3},idx); window.partPopupPinned=true; document.getElementById("rowHoverTooltip").classList.add("part-popup-touch"); e.stopPropagation(); } });
 
     const quickSummaryHtml = summary.best
       ? `<div class="flex items-center gap-1.5">
@@ -972,7 +759,7 @@ function renderExcelTable() {
       <td class="px-3 py-2 mono text-emerald-300 text-[11px]">Out: ${item.boxOut.L}×${item.boxOut.W}×${item.boxOut.H}<br>In: <b>${item.boxIn.L}×${item.boxIn.W}×${item.boxIn.H}</b></td>
       <td class="px-3 py-2 text-[11px] text-amber-200">${item.note}</td>
       <td class="px-3 py-2 text-right">
-        <button class="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/40 text-[11px] font-semibold">Nạp & Xoay thử</button>
+        <button class="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 border border-sky-500/40 text-[11px] font-semibold" ${!window.APP_STATE.isAuthorized ? "disabled" : ""}>Nạp & Xoay thử</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1001,10 +788,12 @@ function selectExcelItem(idx) {
           : "bg-slate-900/90 border-slate-700 text-slate-300 hover:border-sky-500/50"
       }`;
       btn.innerHTML = `<span class="text-sky-300 font-bold">${r.total} ô (${r.nx}×${r.ny})</span> <span class="text-[10px] text-slate-400">${r.ori.label}</span>`;
-      btn.onclick = () => applyRecommendation(item, r);
+      if(window.APP_STATE.isAuthorized) {
+         btn.onclick = () => applyRecommendation(item, r);
+      }
       recBtns.appendChild(btn);
     });
-    applyRecommendation(item, recs[0]);
+    if(window.APP_STATE.isAuthorized) applyRecommendation(item, recs[0]);
   } else {
     renderOrientationMatrix();
     updateUIAndRender();
@@ -1141,8 +930,8 @@ function resetCanvasView() {
   renderMainCanvas();
 }
 
-// Export Master DXF with exact filename format: MASTER_CAD_<MÃ SẢN PHẨM>_<LAYOUT>_<SỐ Ô>CELLS.dxf
 function exportMasterDXF() {
+  if (!checkExportAuth()) return;
   const g = computeCadGeometry();
   const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || {
     partCode: "SANPHAM", partName: "PARTITION", pL: 0, pW: 0, pH: 0, customer: "SECVN",
@@ -1163,27 +952,123 @@ function exportMasterDXF() {
   URL.revokeObjectURL(url);
 }
 
-// Export Master PNG with exact filename format: MASTER_CAD_<MÃ SẢN PHẨM>_<LAYOUT>_<SỐ Ô>CELLS.png
 function exportMasterPNG() {
+  if (!checkExportAuth()) return;
   const prevMode = window.APP_STATE.viewMode;
+  const prevZoom = window.APP_STATE.zoom;
+  const prevPanX = window.APP_STATE.panX;
+  const prevPanY = window.APP_STATE.panY;
+  const prevExporting = window.APP_STATE.isExporting;
+
   window.APP_STATE.viewMode = "master";
-  window.APP_STATE.zoom = 0.9;
+  if (typeof window.refreshDrawingQRCodes === "function") window.refreshDrawingQRCodes();
+
+  const g = computeCadGeometry();
+  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
+  const plates = getPlatesCatalog(g, item);
+  const masterLayout = computeMasterWorldLayout(g, item, plates);
+
+  const exportScale = 1.5;
+  const exportDpr = 2.0;
+  
+  const rectW = masterLayout.worldW * exportScale + 120;
+  const rectH = masterLayout.worldH * exportScale + 120;
+
+  window.APP_STATE.isExporting = true;
+  window.APP_STATE.exportDpr = exportDpr;
+  window.APP_STATE.exportW = rectW * exportDpr;
+  window.APP_STATE.exportH = rectH * exportDpr;
+  
+  window.APP_STATE.zoom = 1.0; 
   window.APP_STATE.panX = 0;
   window.APP_STATE.panY = 0;
+
   renderMainCanvas();
 
-  const canvas = document.getElementById("cadCanvas");
-  const link = document.createElement("a");
-  link.download = `${getMasterFileBaseName()}.png`;
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  const cadCanvas = document.getElementById("cadCanvas");
+  
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = cadCanvas.width;
+  exportCanvas.height = cadCanvas.height;
+  const exportCtx = exportCanvas.getContext("2d");
+  
+  exportCtx.fillStyle = window.APP_STATE.bgTheme === "paper" ? "#f8fafc" : "#050912";
+  exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  exportCtx.drawImage(cadCanvas, 0, 0);
 
+  const link = document.createElement("a");
+  link.download = `${getMasterFileBaseName()}_Master_HQ.png`;
+  link.href = exportCanvas.toDataURL("image/png", 1.0);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  window.APP_STATE.isExporting = prevExporting;
   window.APP_STATE.viewMode = prevMode;
+  window.APP_STATE.zoom = prevZoom;
+  window.APP_STATE.panX = prevPanX;
+  window.APP_STATE.panY = prevPanY;
   renderMainCanvas();
 }
 
-// Export BOM Excel with exact filename format: MASTER_CAD_<MÃ SẢN PHẨM>_<LAYOUT>_<SỐ Ô>CELLS.xlsx
+function exportLayoutOnlyPNG() {
+  if (!checkExportAuth()) return;
+  const prevMode = window.APP_STATE.viewMode;
+  const prevZoom = window.APP_STATE.zoom;
+  const prevPanX = window.APP_STATE.panX;
+  const prevPanY = window.APP_STATE.panY;
+  const prevExporting = window.APP_STATE.isExporting;
+
+  window.APP_STATE.viewMode = "layout";
+  const g = computeCadGeometry();
+  
+  const layoutOnlyLeftPad = 250; 
+  const totalWorldW = g.L + layoutOnlyLeftPad + 120;
+  const totalWorldH = g.W + 280; 
+  
+  const exportScale = 1.8; 
+  const exportDpr = 2.0;
+
+  const rectW = totalWorldW * exportScale + 120;
+  const rectH = totalWorldH * exportScale + 120;
+
+  window.APP_STATE.isExporting = true;
+  window.APP_STATE.exportDpr = exportDpr;
+  window.APP_STATE.exportW = rectW * exportDpr;
+  window.APP_STATE.exportH = rectH * exportDpr;
+  window.APP_STATE.zoom = 1.0;
+  window.APP_STATE.panX = 0;
+  window.APP_STATE.panY = 0;
+
+  renderMainCanvas();
+
+  const cadCanvas = document.getElementById("cadCanvas");
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = cadCanvas.width;
+  exportCanvas.height = cadCanvas.height;
+  const exportCtx = exportCanvas.getContext("2d");
+
+  exportCtx.fillStyle = window.APP_STATE.bgTheme === "paper" ? "#f8fafc" : "#050912";
+  exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  exportCtx.drawImage(cadCanvas, 0, 0);
+
+  const link = document.createElement("a");
+  link.download = `${getMasterFileBaseName()}_Layout2D_HQ.png`;
+  link.href = exportCanvas.toDataURL("image/png", 1.0);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  window.APP_STATE.isExporting = prevExporting;
+  window.APP_STATE.viewMode = prevMode;
+  window.APP_STATE.zoom = prevZoom;
+  window.APP_STATE.panX = prevPanX;
+  window.APP_STATE.panY = prevPanY;
+  renderMainCanvas();
+}
+
 function exportBomExcel() {
+  if (!checkExportAuth()) return;
   const g = computeCadGeometry();
   const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
   const plates = getPlatesCatalog(g, item);
@@ -1211,12 +1096,85 @@ function exportBomExcel() {
   XLSX.writeFile(wb, `${getMasterFileBaseName()}.xlsx`);
 }
 
+function getDrawingMetadata() {
+  const g = computeCadGeometry();
+  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || {};
+  return { schema: "LayoutCAD-Pro-Design-v1", createdAt: new Date().toISOString(), author: "Nguyễn Thị Minh Thư", authorNote: "người con Nam Bộ 🤞", product: { partCode: item.partCode || "", partName: item.partName || "", customer: item.customer || "" }, layout: { L:g.L, W:g.W, nx:g.nx, ny:g.ny, totalCells:g.totalCells, cellX:g.cellX, cellY:g.cellY, tX:g.tX, tY:g.tY, offX:g.offX, offY:g.offY, bX:g.bX, bY:g.bY }, plates: getPlatesCatalog(g,item).map(p=>({code:p.code,type:p.shortType,length:p.length,height:p.height,thickness:p.thick,quantity:p.qty,slotWidth:p.slotW,slotDepth:p.slotDepth,slotCoordinates:p.slots})) };
+}
+
+window.downloadDrawingMetadata = function(){
+  if (!checkExportAuth()) return;
+  const blob=new Blob([JSON.stringify(getDrawingMetadata(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=getMasterFileBaseName()+"_metadata.json";a.click();URL.revokeObjectURL(a.href);
+};
+
+window.refreshDrawingQRCodes = function() {
+  if (!window.QRCode) return;
+  const g = computeCadGeometry();
+  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || {};
+  const d = document.getElementById("drawingQr");
+  const a = document.getElementById("authorQr");
+  if (!d || !a) return;
+
+  const excelQrText = [
+    `CODE:${item.partCode || "N/A"}`,
+    `SP:${item.pL || 0}x${item.pW || 0}x${item.pH || 0}`,
+    `BOX:${item.boxIn?.L || 0}x${item.boxIn?.W || 0}x${item.boxIn?.H || 0}`,
+    `PB:${g.L}x${g.W}xH${g.hVD}`,
+    `CELL:${g.totalCells}(${g.nx}x${g.ny})`,
+    `O:${g.cellX.toFixed(1)}x${g.cellY.toFixed(1)}`,
+    `T:${g.tX}`
+  ].join("|");
+
+  const authorQrText = toUtf8ByteString(
+    "Tac gia: Nguyen Thi Minh Thu - nguoi con Nam Bo | LayoutCAD Pro"
+  );
+
+  try {
+    if(d){
+      d.innerHTML = "";
+      new QRCode(d, {
+        text: excelQrText,
+        width: 76,
+        height: 76,
+        correctLevel: QRCode.CorrectLevel.L
+      });
+    }
+  } catch (err) {
+    console.warn("Drawing QR error:", err);
+  }
+
+  try {
+    if(a){
+      a.innerHTML = "";
+      new QRCode(a, {
+        text: authorQrText,
+        width: 76,
+        height: 76,
+        correctLevel: QRCode.CorrectLevel.L
+      });
+    }
+  } catch (err) {
+    console.warn("Author QR error:", err);
+  }
+};
+window.applyWallUpdate = function(){updateUIAndRender();window.refreshDrawingQRCodes?.();const b=document.getElementById("applyWallUpdate");if(b){b.classList.remove("update-pending");b.classList.add("update-flash");setTimeout(()=>b.classList.remove("update-flash"),700);}const info=document.getElementById("measureInfo");if(info)info.textContent="Đã cập nhật hình học vách và bảng kê chi tiết.";};
+
 function loadDefaultTesst001() {
   window.APP_STATE.items = JSON.parse(JSON.stringify(window.DEFAULT_EXCEL_ITEMS));
   selectExcelItem(0);
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    if (typeof window.export3DSTEP === "function") {
+      const orig3D = window.export3DSTEP;
+      window.export3DSTEP = function() {
+        if (!checkExportAuth()) return;
+        orig3D();
+      };
+    }
+  }, 1000);
+
   const inputIds = [
     "inp_L", "inp_W", "inp_offX", "inp_offY", "inp_bX", "inp_bY",
     "inp_tX", "inp_tY", "inp_nx", "inp_ny", "inp_desX", "inp_desY",
@@ -1226,9 +1184,10 @@ window.addEventListener("DOMContentLoaded", () => {
   inputIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("input", () => {
-      renderExcelTable();
-      renderOrientationMatrix();
-      updateUIAndRender();
+      document.getElementById("canvasContainer")?.classList.add("geometry-changing");
+      const btn=document.getElementById("applyWallUpdate"); if(btn) btn.classList.add("update-pending");
+      renderExcelTable(); renderOrientationMatrix(); updateUIAndRender(); window.refreshDrawingQRCodes?.();
+      clearTimeout(window._cadUpdateFlashTimer); window._cadUpdateFlashTimer=setTimeout(()=>document.getElementById("canvasContainer")?.classList.remove("geometry-changing"),650);
     });
   });
 
@@ -1243,6 +1202,51 @@ window.addEventListener("DOMContentLoaded", () => {
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        
+        // ==========================================
+        // 🔒 KIỂM TRA CHỮ KÝ BẢO MẬT THÔNG MINH (QUÉT TOÀN BỘ FILE)
+        // ==========================================
+        const _0x2b = function(s) { return btoa(unescape(encodeURIComponent(s))); };
+        let _0xauth = 0; 
+        
+        for(let r = 0; r < rows.length; r++) {
+           if(!rows[r]) continue;
+           for(let c = 0; c < rows[r].length; c++) {
+              const val = String(rows[r][c] || "").trim();
+              const bval = _0x2b(val);
+              if (bval === "Q+G6o20gxqFuIE1U") { // "Cảm ơn MT" -> FULL
+                 _0xauth = 2;
+                 break;
+              } else if (bval === "Q2FtIMahbiBOUA==" || bval === "Q+G6o20gxqFuIE5Q") { // "Cam ơn NP" / "Cảm ơn NP" -> PARTIAL
+                 _0xauth = 1;
+              }
+           }
+           if(_0xauth === 2) break;
+        }
+
+        // Nếu file mẫu hoặc file không có chữ ký đúng -> Khóa hoàn toàn, không hiện alert mà đếm ngược trên view
+        if (_0xauth === 0) {
+          triggerDRMLockdown();
+        } else {
+          window.APP_STATE.isAuthorized = true;
+          window.APP_STATE.canExport = (_0xauth === 2);
+          
+          const formArea = document.querySelector("main > aside");
+          if (formArea) {
+            formArea.style.pointerEvents = "auto";
+            formArea.style.opacity = "1";
+          }
+          document.querySelectorAll("button").forEach(btn => {
+            btn.disabled = false;
+            btn.style.cursor = "pointer";
+            btn.title = "";
+          });
+          if (window.APP_STATE.countdownTimer) {
+             clearInterval(window.APP_STATE.countdownTimer);
+          }
+        }
+        // ==========================================
+
         const parsed = parseExcelRowsToItems(rows);
         if (parsed.length > 0) {
           window.APP_STATE.items = parsed;
@@ -1281,4 +1285,448 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof resize3DViewer === "function") resize3DViewer();
   });
   loadDefaultTesst001();
+  setTimeout(()=>window.refreshDrawingQRCodes?.(),500);
 });
+
+function drawTechnicalArrow(ctx, x1, y1, x2, y2, color, text, offset, lineScale, ui) {
+  if (!ui) ui = 1;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.0 * lineScale;
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 6 * ui) {
+    ctx.restore();
+    return;
+  }
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+
+  const off = offset * ui;
+  const sx1 = snapPx(x1 + nx * off);
+  const sy1 = snapPx(y1 + ny * off);
+  const sx2 = snapPx(x2 + nx * off);
+  const sy2 = snapPx(y2 + ny * off);
+
+  ctx.beginPath();
+  ctx.setLineDash([2, 2]);
+  ctx.moveTo(snapPx(x1), snapPx(y1));
+  ctx.lineTo(sx1, sy1);
+  ctx.moveTo(snapPx(x2), snapPx(y2));
+  ctx.lineTo(sx2, sy2);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(sx1, sy1);
+  ctx.lineTo(sx2, sy2);
+  ctx.stroke();
+
+  const aLen = 6.5 * ui;
+  const aWid = 2.6 * ui;
+  ctx.beginPath();
+  ctx.moveTo(sx1, sy1);
+  ctx.lineTo(sx1 + ux * aLen + nx * aWid, sy1 + uy * aLen + ny * aWid);
+  ctx.lineTo(sx1 + ux * aLen - nx * aWid, sy1 + uy * aLen - ny * aWid);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(sx2, sy2);
+  ctx.lineTo(sx2 - ux * aLen + nx * aWid, sy2 - uy * aLen + ny * aWid);
+  ctx.lineTo(sx2 - ux * aLen - nx * aWid, sy2 - uy * aLen - ny * aWid);
+  ctx.closePath();
+  ctx.fill();
+
+  const mx = (sx1 + sx2) / 2;
+  const my = (sy1 + sy2) / 2;
+  ctx.font = `700 ${10.5 * ui}px 'JetBrains Mono', monospace`;
+  const tw = ctx.measureText(text).width;
+
+  ctx.save();
+  ctx.translate(mx, my);
+  if (Math.abs(dx) < Math.abs(dy)) {
+    ctx.rotate(-Math.PI / 2);
+  }
+  const bgFill = window.APP_STATE && window.APP_STATE.bgTheme === "paper" ? "rgba(248, 250, 252, 0.95)" : "rgba(4, 7, 14, 0.94)";
+  ctx.fillStyle = bgFill;
+  ctx.fillRect(-tw / 2 - 5 * ui, -7.5 * ui, tw + 10 * ui, 15 * ui);
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+  ctx.restore();
+}
+
+function snapPx(val) {
+  return Math.round(val) + 0.5;
+}
+
+function renderMainCanvas() {
+  if (window.APP_STATE.viewMode === "3d") {
+    if (typeof rebuild3DScene === "function") rebuild3DScene();
+    return;
+  }
+
+  const canvas = document.getElementById("cadCanvas");
+  const container = document.getElementById("canvasContainer");
+  if (!canvas || !container) return;
+
+  const dpr = window.APP_STATE.isExporting ? window.APP_STATE.exportDpr : Math.max(window.devicePixelRatio || 1, 2.75);
+  
+  let rectWidth, rectHeight;
+  if (window.APP_STATE.isExporting) {
+    rectWidth = window.APP_STATE.exportW / dpr;
+    rectHeight = window.APP_STATE.exportH / dpr;
+  } else {
+    const rect = container.getBoundingClientRect();
+    rectWidth = rect.width;
+    rectHeight = rect.height;
+  }
+
+  canvas.width = Math.floor(rectWidth * dpr);
+  canvas.height = Math.floor(rectHeight * dpr);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.clearRect(0, 0, rectWidth, rectHeight);
+
+  const g = computeCadGeometry();
+  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
+  const plates = getPlatesCatalog(g, item);
+  const c = window.APP_STATE.colors;
+  const isPaper = window.APP_STATE.bgTheme === "paper";
+  const lineScale = window.APP_STATE.lineWeightMode === "hairline" ? 0.82 : window.APP_STATE.lineWeightMode === "bold" ? 1.45 : 1.08;
+
+  const masterLayout = computeMasterWorldLayout(g, item, plates);
+  
+  const layoutOnlyLeftPad = 250; 
+  const totalWorldW = window.APP_STATE.viewMode === "master" ? masterLayout.worldW : (g.L + layoutOnlyLeftPad + 120);
+  const totalWorldH = window.APP_STATE.viewMode === "master" ? masterLayout.worldH : (g.W + 280); 
+
+  const baseScale = Math.min((rectWidth - 60) / totalWorldW, (rectHeight - 60) / totalWorldH);
+  const scale = Math.max(0.08, baseScale * window.APP_STATE.zoom);
+  const ui = scale * 1.8;
+
+  const drawW = totalWorldW * scale;
+  const drawH = totalWorldH * scale;
+  
+  const originX = (rectWidth - drawW) / 2 + window.APP_STATE.panX + (window.APP_STATE.viewMode === "master" ? Math.abs(masterLayout.frameLeft) * scale : layoutOnlyLeftPad * scale);
+  const originY = (rectHeight - drawH) / 2 + window.APP_STATE.panY + (window.APP_STATE.viewMode === "master" ? (masterLayout.frameTop - g.W) * scale : 160 * scale); 
+
+  window.cadMeasureTransform = { originX, originY, scale, width: rectWidth, height: rectHeight };
+  const toScreenX = (mmX) => originX + mmX * scale;
+  const toScreenY = (mmYFromTop) => originY + mmYFromTop * scale;
+  if (typeof redrawMeasures === "function") requestAnimationFrame(redrawMeasures);
+
+  if (window.APP_STATE.viewMode === "master") {
+    const fx = snapPx(toScreenX(masterLayout.frameLeft));
+    const fy = snapPx(toScreenY(g.W - masterLayout.frameTop));
+    const fw = Math.round(masterLayout.worldW * scale);
+    const fh = Math.round(masterLayout.worldH * scale);
+
+    ctx.fillStyle = isPaper ? "rgba(255, 255, 255, 0.96)" : "rgba(6, 10, 20, 0.90)";
+    ctx.fillRect(fx, fy, fw, fh);
+    ctx.strokeStyle = isPaper ? "#475569" : "rgba(148, 163, 184, 0.45)";
+    ctx.lineWidth = 1.0 * lineScale;
+    ctx.strokeRect(fx, fy, fw, fh);
+    ctx.strokeStyle = c.frame;
+    ctx.lineWidth = 1.5 * lineScale;
+    ctx.strokeRect(fx + 6 * ui, fy + 6 * ui, fw - 12 * ui, fh - 12 * ui);
+  }
+
+  ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
+  ctx.font = `800 ${12 * ui}px 'JetBrains Mono', monospace`;
+  ctx.textAlign = "left";
+  ctx.fillText(`I. MẶT BẰNG LAYOUT VÁCH NGĂN 2D (TỔNG: ${g.totalCells} Ô = ${g.nx}×${g.ny})`, toScreenX(0), toScreenY(-75)); 
+
+  if (document.getElementById("chk_showBoxIn")?.checked && item) {
+    const diffX = (item.boxIn.L - g.L) / 2;
+    const diffY = (item.boxIn.W - g.W) / 2;
+    ctx.save();
+    ctx.strokeStyle = "rgba(16, 185, 129, 0.55)";
+    ctx.lineWidth = 1.1 * lineScale;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(snapPx(toScreenX(-diffX)), snapPx(toScreenY(-diffY)), Math.round(item.boxIn.L * scale), Math.round(item.boxIn.W * scale));
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.strokeStyle = isPaper ? "#0369a1" : c.frame;
+  ctx.lineWidth = 1.8 * lineScale;
+  ctx.strokeRect(snapPx(toScreenX(0)), snapPx(toScreenY(0)), Math.round(g.L * scale), Math.round(g.W * scale));
+  ctx.restore();
+
+  if (g.offX > 0 || g.offY > 0) {
+    ctx.save();
+    ctx.strokeStyle = isPaper ? "#64748b" : "#94a3b8";
+    ctx.lineWidth = 0.9 * lineScale;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeRect(snapPx(toScreenX(g.offX)), snapPx(toScreenY(g.offY)), Math.round((g.L - 2 * g.offX) * scale), Math.round((g.W - 2 * g.offY) * scale));
+    ctx.restore();
+  }
+
+  const showPart = document.getElementById("chk_showPart")?.checked;
+  const fp = window.APP_STATE.activeFootprint;
+
+  for (let ix = 0; ix < g.nx; ix++) {
+    for (let iy = 0; iy < g.ny; iy++) {
+      const cx = g.offX + g.bX + ix * (g.cellX + g.tX);
+      const cy = g.offY + g.bY + iy * (g.cellY + g.tY);
+      const sx = toScreenX(cx);
+      const sy = toScreenY(cy);
+      const sw = g.cellX * scale;
+      const sh = g.cellY * scale;
+
+      if (showPart && fp) {
+        const fits = fp.x <= g.cellX + 0.05 && fp.y <= g.cellY + 0.05;
+        const pw = Math.min(fp.x, g.cellX) * scale;
+        const ph = Math.min(fp.y, g.cellY) * scale;
+        const px = sx + (sw - pw) / 2;
+        const py = sy + (sh - ph) / 2;
+
+        ctx.fillStyle = fits ? "rgba(16, 185, 129, 0.14)" : "rgba(239, 68, 68, 0.22)";
+        ctx.strokeStyle = fits ? "rgba(16, 185, 129, 0.65)" : "rgba(239, 68, 68, 0.85)";
+        ctx.lineWidth = 0.85 * lineScale;
+        ctx.fillRect(px, py, pw, ph);
+        ctx.strokeRect(snapPx(px), snapPx(py), Math.round(pw), Math.round(ph));
+      }
+
+      if (sw > 18 * ui && sh > 11 * ui) {
+        const cellNum = iy * g.nx + ix + 1;
+        ctx.fillStyle = isPaper ? "#334155" : "rgba(226, 232, 240, 0.78)";
+        ctx.font = `600 ${Math.min(sw, sh) * 0.28}px 'JetBrains Mono', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`#${cellNum}`, sx + sw / 2, sy + sh / 2);
+      }
+    }
+  }
+
+  const showWallCodes = document.getElementById("chk_showWallCodes")?.checked;
+
+  ctx.save();
+  ctx.fillStyle = c.vd;
+  ctx.strokeStyle = isPaper ? "#854d0e" : "#fef08a";
+  ctx.lineWidth = 0.85 * lineScale;
+  if (document.getElementById("chk_showVD")?.checked !== false) g.vWalls.forEach((wx, idx) => {
+    const sx = snapPx(toScreenX(wx));
+    const sy = snapPx(toScreenY(g.offY + g.bY));
+    const sw = Math.max(1.5, g.tX * scale);
+    const sh = Math.round((g.W - 2 * (g.offY + g.bY)) * scale);
+    ctx.fillRect(sx, sy, sw, sh);
+    ctx.strokeRect(sx, sy, sw, sh);
+
+    if (showWallCodes) {
+      ctx.fillStyle = isPaper ? "#a16207" : c.vd;
+      ctx.font = `700 ${9 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "center";
+      ctx.fillText(`VD${idx + 1}`, sx + sw / 2, sy - 6 * ui);
+      ctx.fillStyle = c.vd;
+    }
+  });
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = c.vn;
+  ctx.strokeStyle = isPaper ? "#9d174d" : "#fbcfe8";
+  ctx.lineWidth = 0.85 * lineScale;
+  if (document.getElementById("chk_showVN")?.checked !== false) g.hWalls.forEach((wy, idx) => {
+    const sx = snapPx(toScreenX(g.offX + g.bX));
+    const sy = snapPx(toScreenY(wy));
+    const sw = Math.round((g.L - 2 * (g.offX + g.bX)) * scale);
+    const sh = Math.max(1.5, g.tY * scale);
+    ctx.fillRect(sx, sy, sw, sh);
+    ctx.strokeRect(sx, sy, sw, sh);
+
+    if (showWallCodes) {
+      const outerLeftX = snapPx(toScreenX(0));
+      ctx.save();
+      ctx.strokeStyle = isPaper ? "rgba(190, 24, 93, 0.45)" : "rgba(244, 114, 182, 0.45)";
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(outerLeftX - 3 * ui, sy + sh / 2);
+      ctx.lineTo(sx, sy + sh / 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = isPaper ? "#be185d" : c.vn;
+      ctx.font = `700 ${9.5 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`VN${idx + 1}`, outerLeftX - 5 * ui, sy + sh / 2);
+      ctx.fillStyle = c.vn;
+    }
+  });
+  ctx.restore();
+
+  ctx.fillStyle = c.slot;
+  g.vWalls.forEach(wx => {
+    g.hWalls.forEach(wy => {
+      ctx.fillRect(snapPx(toScreenX(wx) - 1), snapPx(toScreenY(wy) - 1), Math.max(3, g.tX * scale + 2), Math.max(3, g.tY * scale + 2));
+    });
+  });
+
+  drawTechnicalArrow(ctx, toScreenX(0), toScreenY(0), toScreenX(g.L), toScreenY(0), c.frame, `DÀI PHỦ BÌ L = ${g.L.toFixed(1)} mm`, -14, lineScale, ui);
+  
+  const leftOutsideOffsetPx = 65; 
+  drawTechnicalArrow(ctx, toScreenX(0), toScreenY(0), toScreenX(0), toScreenY(g.W), c.frame, `RỘNG PHỦ BÌ W = ${g.W.toFixed(1)} mm`, leftOutsideOffsetPx, lineScale, ui);
+
+  if (g.nx > 0 && g.cellX > 0) {
+    const cx0 = g.offX + g.bX;
+    drawTechnicalArrow(ctx, toScreenX(cx0), toScreenY(g.W), toScreenX(cx0 + g.cellX), toScreenY(g.W), c.vd, `Ô X = ${g.cellX.toFixed(1)}`, 35, lineScale, ui);
+  }
+
+  if (g.ny > 0 && g.cellY > 0) {
+    const cy0 = g.offY + g.bY;
+    drawTechnicalArrow(ctx, toScreenX(g.L), toScreenY(cy0), toScreenX(g.L), toScreenY(cy0 + g.cellY), c.vn, `Ô Y = ${g.cellY.toFixed(1)}`, -26, lineScale, ui);
+  }
+
+  if (window.APP_STATE.viewMode === "master") {
+    ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
+    ctx.font = `800 ${12 * ui}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "left";
+    ctx.fillText("II. BẢN VẼ TÁCH CHI TIẾT TỪNG TẤM VÁCH & RÃNH ĐAN (MÀU RIÊNG)", toScreenX(masterLayout.rightColX), toScreenY(-75)); 
+
+    masterLayout.platePlacements.forEach(pp => {
+      const p = pp.plate;
+      const px = snapPx(toScreenX(pp.x));
+      const py = snapPx(toScreenY(g.W - pp.topY));
+      const pw = Math.round(pp.width * scale);
+      const ph = Math.round(pp.height * scale);
+
+      ctx.fillStyle = p.color;
+      ctx.font = `700 ${10.5 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "left";
+      ctx.fillText(`■ ${pp.index}. MÃ VÁCH: ${p.code} (${p.title}) — SL: ${p.qty} TẤM`, px, py - (pp.rotateCoords ? 26 * ui : 12 * ui));
+
+      ctx.fillStyle = p.color + "16";
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 1.5 * lineScale;
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeRect(px, py, pw, ph);
+
+      p.slots.forEach(sc => {
+        const sx = snapPx(toScreenX(pp.x + sc - p.slotW / 2));
+        const sw = Math.max(2, p.slotW * scale);
+        const sh = Math.round(p.slotDepth * scale);
+        const sy = p.cutFrom === "top" ? py : (py + ph - sh);
+        ctx.fillStyle = c.slot + "40";
+        ctx.strokeStyle = c.slot;
+        ctx.lineWidth = 1.05 * lineScale;
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeRect(sx, sy, sw, sh);
+      });
+
+      const dimOffset = 20; 
+      drawTechnicalArrow(ctx, px, py + ph, px + pw, py + ph, p.color, `DÀI ${p.shortType} = ${p.length.toFixed(1)} mm (${p.slots.length} rãnh rộng ${p.slotW.toFixed(2)} × sâu ${p.slotDepth.toFixed(1)}mm)`, dimOffset, lineScale, ui);
+      
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.font = `700 ${10 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`KT PHÔI: ${p.length.toFixed(1)}×${p.height.toFixed(1)}×${p.thick}mm`, px + pw / 2, py + ph + (42 * ui));
+      ctx.restore();
+      
+      drawTechnicalArrow(ctx, px + pw, py, px + pw, py + ph, p.color, `CAO = ${p.height.toFixed(1)}`, -20, lineScale, ui);
+    });
+
+    const bx = snapPx(toScreenX(masterLayout.bomX));
+    const by = snapPx(toScreenY(g.W - masterLayout.bomTopY));
+    const bw = Math.round(masterLayout.bomW * scale);
+    const bh = Math.round(masterLayout.bomBoxH * scale);
+
+    ctx.fillStyle = isPaper ? "rgba(241, 245, 249, 0.98)" : "rgba(10, 17, 32, 0.96)";
+    ctx.strokeStyle = c.frame;
+    ctx.lineWidth = 1.5 * lineScale;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeRect(bx, by, bw, bh);
+
+    ctx.fillStyle = "rgba(56, 189, 248, 0.14)";
+    ctx.fillRect(bx, by, bw, 24 * ui);
+    ctx.beginPath();
+    ctx.moveTo(bx, snapPx(by + 24 * ui));
+    ctx.lineTo(bx + bw, snapPx(by + 24 * ui));
+    ctx.stroke();
+
+    const midX = snapPx(bx + bw * 0.48);
+    ctx.beginPath();
+    ctx.moveTo(midX, by);
+    ctx.lineTo(midX, by + bh);
+    ctx.stroke();
+
+    ctx.fillStyle = isPaper ? "#0369a1" : "#38bdf8";
+    ctx.font = `800 ${10 * ui}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "left";
+    ctx.fillText("III. THÔNG TIN SẢN PHẨM & QUY CÁCH ĐÓNG GÓI", bx + 10 * ui, by + 16 * ui);
+    ctx.fillText("BẢNG KÊ CHI TIẾT CÁC VÁCH NGĂN (MÃ VÁCH & MÀU RIÊNG)", midX + 10 * ui, by + 16 * ui);
+
+    const ruleCheck = checkTotalMatchesRule(g.totalCells, getRuleConfig());
+    ctx.fillStyle = isPaper ? "#0f172a" : "#f1f5f9";
+    ctx.font = `600 ${9 * ui}px 'JetBrains Mono', monospace`;
+    const infoLines = [
+      `• Mã hàng: ${item ? item.partCode : "N/A"} | KH: ${item ? item.customer : "SECVN"}`,
+      `• Tên SP : ${item ? item.partName : "N/A"}`,
+      `• KT SP  : ${item ? `${item.pL}×${item.pW}×${item.pH}` : "N/A"} mm`,
+      `• Box In : ${item ? `${item.boxIn.L}×${item.boxIn.W}×${item.boxIn.H}` : ""} mm`,
+      `• Layout : Phủ bì ${g.L}×${g.W}×H${g.hVD} | ${g.totalCells} ô (${g.nx}×${g.ny})`,
+      `• Lọt lòng 1 ô: ${g.cellX.toFixed(1)}×${g.cellY.toFixed(1)} mm`
+    ];
+    infoLines.forEach((ln, idx) => {
+      ctx.fillText(ln, bx + 10 * ui, by + (38 + idx * 16) * ui);
+    });
+
+    plates.forEach((p, idx) => {
+      const ry = by + (40 + idx * 22) * ui;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(midX + 10 * ui, ry - 7 * ui, 8 * ui, 8 * ui);
+      ctx.fillText(`${p.code} | KT:${p.length.toFixed(1)}×${p.height.toFixed(1)} | SL:${p.qty}`, midX + 24 * ui, ry);
+    });
+
+    const qrSize = 64 * ui;
+    const qrAuthorX = snapPx(bx + bw - qrSize - 16 * ui);
+    const qrAuthorY = snapPx(by + bh - qrSize - 16 * ui); 
+    
+    ctx.save();
+    ctx.fillStyle = isPaper ? "rgba(255,255,255,0.95)" : "rgba(10,17,32,0.96)";
+    ctx.fillRect(qrAuthorX - 6 * ui, qrAuthorY - 6 * ui, qrSize + 12 * ui, qrSize + 12 * ui);
+    ctx.strokeStyle = c.frame;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(qrAuthorX - 6 * ui, qrAuthorY - 6 * ui, qrSize + 12 * ui, qrSize + 12 * ui);
+    ctx.restore();
+    
+    drawQrCodeOnContext(ctx, "authorQr", qrAuthorX, qrAuthorY, qrSize);
+  }
+  
+  // VẼ LỚP CẢNH BÁO BẢN QUYỀN CHÌM DƯỚI BẢN VẼ / TRÊN MÀN HÌNH VIEW KHI KHÔNG HỢP LỆ
+  if (!window.APP_STATE.isAuthorized) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.fillStyle = "rgba(15, 23, 42, 0.78)"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(-Math.PI / 6);
+    
+    ctx.fillStyle = "rgba(239, 68, 68, 0.85)";
+    ctx.font = `900 ${52 * (canvas.width/1500)}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("VUI LÒNG TẢI FILE THÔNG TIN CẦN LAYOUT VÁCH", 0, -60 * (canvas.width/1500));
+    
+    ctx.fillStyle = "rgba(250, 204, 21, 0.90)";
+    ctx.font = `900 ${100 * (canvas.width/1500)}px sans-serif`;
+    ctx.fillText("00:" + String(window.APP_STATE.countdownSecs).padStart(2, '0'), 0, 50 * (canvas.width/1500));
+    ctx.restore();
+  }
+
+  document.getElementById("zoomStatus").textContent = `Zoom: ${Math.round(window.APP_STATE.zoom * 100)}% • Super-HiDPI ${dpr.toFixed(2)}x`;
+}
