@@ -1,0 +1,201 @@
+/* ==========================================================================
+   THÔNG SỐ VÁCH CAD - ISO STANDARD PRO (STYLESHEET v2)
+   ========================================================================== */
+:root {
+  --bg-dark: #050912;
+  --panel-bg: rgba(13, 21, 38, 0.96);
+  --border-col: rgba(51, 65, 85, 0.78);
+  --accent-cyan: #38bdf8;
+  --accent-yellow: #facc15;
+  --accent-pink: #f472b6;
+  --accent-green: #4ade80;
+  --accent-orange: #fb923c;
+  --accent-red: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: #f1f5f9;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070c17;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+/* Animated Logo Effects */
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.45)); }
+  50% { filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.85)); }
+}
+
+.logo-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* Panels & Cards */
+.cad-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-col);
+  backdrop-filter: blur(12px);
+}
+
+.section-card {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(51, 65, 85, 0.65);
+  border-radius: 10px;
+  padding: 11px 12px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.section-card:hover {
+  border-color: rgba(56, 189, 248, 0.48);
+  box-shadow: 0 4px 20px -4px rgba(14, 165, 233, 0.12);
+}
+
+.section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Inputs */
+.cad-input {
+  background: #060b14;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+.cad-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.22);
+}
+
+.step-btn {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  padding: 0 7px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.12s;
+}
+.step-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+/* Viewport Background Themes */
+.viewport-autocad {
+  background-color: #04070e;
+  background-image:
+    radial-gradient(rgba(56, 189, 248, 0.14) 1px, transparent 1px),
+    linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
+  background-size: 20px 20px, 100px 100px, 100px 100px;
+}
+
+.viewport-blueprint {
+  background-color: #071936;
+  background-image:
+    linear-gradient(to right, rgba(56, 189, 248, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.12) 1px, transparent 1px);
+  background-size: 25px 25px;
+}
+
+.viewport-paper {
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.25) 1px, transparent 1px);
+  background-size: 25px 25px;
+}
+
+/* Excel Row Active State */
+.row-selected {
+  background: rgba(14, 165, 233, 0.18) !important;
+  border-left: 4px solid #38bdf8;
+}
+
+/* Color Swatch */
+.color-swatch-input {
+  -webkit-appearance: none;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+.color-swatch-input::-webkit-color-swatch-wrapper { padding: 0; }
+.color-swatch-input::-webkit-color-swatch {
+  border: 1.5px solid rgba(255,255,255,0.45);
+  border-radius: 5px;
+}
+
+/* Floating Quick-Preview Tooltip Card on Excel Row Hover */
+#rowHoverTooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  width: 390px;
+  background: rgba(7, 12, 24, 0.98);
+  border: 1.5px solid rgba(56, 189, 248, 0.65);
+  border-radius: 14px;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.85), 0 0 25px rgba(14, 165, 233, 0.22);
+  padding: 12px 14px;
+  backdrop-filter: blur(16px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+/* Collapsible Excel Body Transition */
+.excel-collapsible {
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease;
+  overflow: hidden;
+}
+.excel-collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border: none !important;
+}
