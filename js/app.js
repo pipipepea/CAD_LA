@@ -40,7 +40,7 @@ function drawQrCodeOnContext(ctx, elementId, x, y, size) {
 }
 
 // ============================================================================
-// HÀM TẠO NỘI DUNG DXF CHUẨN TRỰC TIẾP (ĐẢM BẢO KHÔNG BAO GIỜ TRỐNG RỖNG)
+// HÀM XUẤT FILE DXF CHUẨN ĐẦY ĐỦ CÁC THỰC THỂ (KHÔNG BAO GIỜ BỊ TRỐNG)
 // ============================================================================
 function buildMasterDxfContent(g, item, plates, ruleCheck) {
   let lines = [
@@ -89,11 +89,10 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
     );
   });
 
-  // Vẽ chi tiết các tấm vách tách rời ở cột bên phải
+  // Vẽ chi tiết các tấm vách tách rời ở cột bên phải (tránh chồng lấn)
   let offsetXPos = g.L + 550;
   plates.forEach((p, idx) => {
-    let py = idx * 300; // Khoảng cách giữa các tấm
-    // Khung phôi tấm vách
+    let py = idx * 350; 
     lines.push(
       "0", "LWPOLYLINE",
       "8", p.shortType,
@@ -105,7 +104,6 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
       "10", String(offsetXPos), "20", String(py + p.height)
     );
 
-    // Vẽ rãnh đan trên tấm
     p.slots.forEach(sc => {
       let sx = offsetXPos + sc - p.slotW / 2;
       let sy = p.cutFrom === "top" ? py : (py + p.height - p.slotDepth);
@@ -1249,6 +1247,7 @@ window.refreshDrawingQRCodes = function() {
 };
 window.applyWallUpdate = function(){updateUIAndRender();window.refreshDrawingQRCodes?.();const b=document.getElementById("applyWallUpdate");if(b){b.classList.remove("update-pending");b.classList.add("update-flash");setTimeout(()=>b.classList.remove("update-flash"),700);}const info=document.getElementById("measureInfo");if(info)info.textContent="Đã cập nhật hình học vách và bảng kê chi tiết.";};
 
+// CẬP NHẬT TÊN FILE MẪU MẶC ĐỊNH THÀNH 'Test ok.xlsx'
 function loadDefaultTesst001() {
   window.APP_STATE.items = JSON.parse(JSON.stringify(window.DEFAULT_EXCEL_ITEMS));
   selectExcelItem(0);
@@ -1314,7 +1313,7 @@ window.addEventListener("DOMContentLoaded", () => {
            if(_0xauth === 2) break;
         }
 
-        // Nếu file mẫu hoặc file không có chữ ký đúng -> Khóa hoàn toàn, không hiện alert
+        // Nếu file mẫu hoặc file không có chữ ký đúng -> Khóa hoàn toàn
         if (_0xauth === 0) {
           triggerDRMLockdown();
         } else {
@@ -1465,7 +1464,6 @@ function renderMainCanvas() {
   if (is3DMode) {
     if (typeof rebuild3DScene === "function") rebuild3DScene();
     
-    // Nếu chưa được cấp quyền (sai mã), hiển thị thông báo và đồng hồ chìm trực tiếp trên khung 3D container
     const threeHolder = document.getElementById("threeCanvasHolder");
     if (threeHolder) {
       let overlay3d = document.getElementById("drm3dOverlay");
@@ -1487,7 +1485,6 @@ function renderMainCanvas() {
     }
     return;
   } else {
-    // Nếu chuyển về 2D, dọn dẹp overlay 3D nếu có
     const overlay3d = document.getElementById("drm3dOverlay");
     if (overlay3d) overlay3d.remove();
   }
