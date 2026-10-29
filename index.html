@@ -133,10 +133,10 @@
     </div>
   </section>
 
-  <!-- MAIN WORKSPACE (Dùng chuẩn 2 cột Grid: Cột trái thông số, Cột phải bản vẽ) -->
+  <!-- MAIN WORKSPACE -->
   <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
 
-    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ BÊN TRÁI - LUÔN CỐ ĐỊNH ỔN ĐỊNH Ở TRANG CHÍNH) -->
+    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ BÊN TRÁI) -->
     <aside id="sidebarPanel" class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl">
       <div>
         <!-- NÚT THU GỌN NỘI DUNG BÊN TRONG CỘT THÔNG SỐ -->
@@ -450,18 +450,25 @@
     <!-- RIGHT WORKSPACE (VÙNG BẢN VẼ BÊN PHẢI) -->
     <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
 
-      <!-- VIEWPORT TOOLBAR -->
+      <!-- VIEWPORT TOOLBAR (Đã điều chỉnh nút mở/thu gọn màu đỏ to bằng các nút chế độ xem bên cạnh) -->
       <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
-            📐 Bản Vẽ Ghép Tổng Hợp (Không Chồng Lấn)
+        <div class="flex items-center gap-1.5">
+          <!-- NÚT THU GỌN / MỞ RỘNG (ĐÃ KÉO TO BẰNG NÚT VÀNG BÊN CẠNH) -->
+          <button onclick="toggleSidebarInner()" class="px-3 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs transition flex items-center gap-1.5 shadow-md">
+            <span id="toggleBtnIcon">▼</span> <span id="toggleBtnText">Thu gọn bảng thông số</span>
           </button>
-          <button id="tabLayoutOnly" onclick="setViewMode('layout')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
-            🔍 Chỉ Xem Mặt Bằng 2D
-          </button>
-          <button id="tab3DView" onclick="setViewMode('3d')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white transition">
-            🧊 Mô Hình 3D Vách & Box
-          </button>
+
+          <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
+              📐 Bản Vẽ Ghép Tổng Hợp (Không Chồng Lấn)
+            </button>
+            <button id="tabLayoutOnly" onclick="setViewMode('layout')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+              🔍 Chỉ Xem Mặt Bằng 2D
+            </button>
+            <button id="tab3DView" onclick="setViewMode('3d')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white transition">
+              🧊 Mô Hình 3D Vách & Box
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 text-xs">
@@ -600,18 +607,21 @@
     </section>
   </main>
 
-  <!-- SCRIPT THU GỌN / MỞ RỘNG NỘI DUNG TRONG CỘT THÔNG SỐ AN TOÀN -->
+  <!-- SCRIPT THU GỌN / MỞ RỘNG NỘI DUNG CỘT THÔNG SỐ -->
   <script>
     function toggleSidebarInner() {
       const content = document.getElementById('sidebarInnerContent');
-      const textBtn = document.getElementById('sidebarToggleText');
+      const textBtn = document.getElementById('toggleBtnText');
+      const iconBtn = document.getElementById('toggleBtnIcon');
       
       if (content.style.display === 'none') {
         content.style.display = 'block';
-        textBtn.textContent = 'Thu gọn nội dung';
+        textBtn.textContent = 'Thu gọn bảng thông số';
+        iconBtn.textContent = '▼';
       } else {
         content.style.display = 'none';
-        textBtn.textContent = 'Mở rộng nội dung';
+        textBtn.textContent = 'Mở rộng bảng thông số';
+        iconBtn.textContent = '▶';
       }
       
       setTimeout(() => {
