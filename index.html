@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css" />
   <style>
-    /* CSS hỗ trợ thu gọn cột thông số mượt mà trên máy tính */
+    /* CSS hỗ trợ ẩn/hiện cột thông số mượt mà */
     .sidebar-collapsed { display: none !important; }
   </style>
 </head>
@@ -137,10 +137,9 @@
     </div>
   </section>
 
-  <!-- THANH NÚT ĐỘC LẬP NẰM Ở VÙNG VÀNG (NGAY TRÊN KHUNG BẢN VẼ) -->
+  <!-- THANH NÚT ĐỘC LẬP DUY NHẤT NẰM Ở VÙNG VÀNG -->
   <div class="max-w-[1920px] w-full mx-auto px-4 pt-3">
     <div class="flex items-center gap-2">
-      <!-- NÚT RIÊNG BIỆT THU GỌN / MỞ RỘNG BẢNG THÔNG SỐ (VÙNG VÀNG) -->
       <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition flex items-center gap-2 shadow-lg" title="Thu gọn / Mở rộng bảng thông số">
         <span id="toggleIcon">◀</span> <span>Bảng Thông Số</span>
       </button>
@@ -150,7 +149,7 @@
   <!-- MAIN WORKSPACE -->
   <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ BÊN TRÁI) -->
+    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ) -->
     <aside id="sidebarPanel" class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl transition-all duration-300">
       <div>
         <!-- COLOR SWATCH & WALL CODE BAR -->
@@ -451,10 +450,10 @@
       </div>
     </aside>
 
-    <!-- RIGHT WORKSPACE (VÙNG XANH DƯƠNG BÊN PHẢI) -->
+    <!-- RIGHT WORKSPACE (VÙNG XANH DƯƠNG) -->
     <section id="mainContentSection" class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3 transition-all duration-300">
 
-      <!-- VIEWPORT TOOLBAR (BẢNG ĐIỀU KHIỂN CHẾ ĐỘ XEM TRÊN MÁY TÍNH) -->
+      <!-- VIEWPORT TOOLBAR (CHỈ CHỨA CÁC NÚT CHẾ ĐỘ XEM) -->
       <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
@@ -604,7 +603,7 @@
     </section>
   </main>
 
-  <!-- SCRIPT XỬ LÝ ĐIỀU KHIỂN TÁCH RỜI NÚT VÀ ĐẨY KHUNG -->
+  <!-- SCRIPT ĐIỀU KHIỂN THU GỌN / MỞ RỘNG CỘT THÔNG SỐ CHUẨN XÁC -->
   <script>
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebarPanel');
@@ -612,13 +611,13 @@
       const toggleIcon = document.getElementById('toggleIcon');
       
       if (sidebar.classList.contains('sidebar-collapsed')) {
-        // Mở rộng trở lại: đẩy bảng thông số ra bên cạnh (trả lại bố cục 2 cột)
+        // Phóng to trở lại: đẩy cột thông số bên trái ra lại bên cạnh
         sidebar.classList.remove('sidebar-collapsed');
         sidebar.style.display = 'flex';
         mainContent.className = "lg:col-span-8 xl:col-span-9 flex flex-col gap-3 transition-all duration-300";
         toggleIcon.textContent = "◀";
       } else {
-        // Thu gọn: ẩn cột thông số bên trái, đẩy phần bản vẽ bên phải chiếm trọn không gian (12 cột)
+        // Thu gọn: ẩn cột thông số, vùng bản vẽ bên phải mở rộng tràn màn hình
         sidebar.classList.add('sidebar-collapsed');
         sidebar.style.display = 'none';
         mainContent.className = "lg:col-span-12 xl:col-span-12 flex flex-col gap-3 transition-all duration-300";
