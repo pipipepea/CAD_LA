@@ -58,10 +58,6 @@
           <input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
         </label>
 
-        <button onclick="loadDefaultTesst001()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
-          🔄 Nạp mẫu TESST 001.xlsx
-        </button>
-
         <button onclick="exportMasterDXF()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-lg transition">
           📐 Xuất AutoCAD (.DXF)
         </button>
@@ -118,7 +114,7 @@
           <div id="recommendationButtons" class="flex flex-wrap items-center gap-1.5"></div>
         </div>
 
-        <!-- 6-ORIENTATION AUTO-ROTATION EXPLORER (ĐỨNG NGANG / ĐỨNG DỌC / ĐẶT NẰM PHẲNG) -->
+        <!-- 6-ORIENTATION AUTO-ROTATION EXPLORER -->
         <div id="orientationMatrixBody" class="mt-3 pt-3 border-t border-slate-800/90">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
             <div class="flex items-center gap-2">
@@ -135,10 +131,10 @@
     </div>
   </section>
 
-  <!-- MAIN WORKSPACE: LEFT 6-SECTION PANEL + RIGHT SUPER-HIDPI CAD VIEWPORT -->
+  <!-- MAIN WORKSPACE -->
   <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-    <!-- LEFT SIDEBAR: 6 ISO CAD PARAMETER SECTIONS -->
+    <!-- LEFT SIDEBAR -->
     <aside class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl">
       <div>
         <!-- 1. KÍCH THƯỚC PHỦ BÌ -->
@@ -378,9 +374,6 @@
           <button onclick="export3DSTEP()" class="py-2 px-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-[11px] transition">
             ⚙️ TẢI 3D .STEP
           </button>
-          <button onclick="exportBomExcel()" class="py-2 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition">
-            📊 BOM .XLSX
-          </button>
           <button onclick="exportMasterPNG()" class="col-span-2 py-1.5 px-2 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white font-bold text-[11px] transition">
             🖼️ TẢI ẢNH BẢN VẼ TỔNG HỢP (.PNG - Zoom 170%)
           </button>
@@ -391,7 +384,7 @@
       </div>
     </aside>
 
-    <!-- RIGHT WORKSPACE: COLOR PALETTE + SUPER-HIDPI CANVAS / 3D VIEWER + DETACHED PLATES -->
+    <!-- RIGHT WORKSPACE -->
     <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
 
       <!-- COLOR SWATCH & WALL CODE BAR -->
@@ -502,19 +495,20 @@
       </div>
 
       <div id="measureToolbar" class="cad-panel rounded-xl p-2 flex flex-wrap items-center gap-2 text-xs">
-<button id="measureToggle" type="button" onclick="toggleMeasure()" class="touch-action-btn">📐 Tạo DIM</button>
-<button id="confirmDimPoint1" type="button" onclick="confirmDimPoint(1)" class="touch-action-btn dim-confirm-btn" disabled>① Xác nhận điểm 1</button>
-<button id="confirmDimPoint2" type="button" onclick="confirmDimPoint(2)" class="touch-action-btn dim-confirm-btn" disabled>② Điểm 2</button>
-<button id="confirmDimPlacement" type="button" onclick="confirmDimPlacement()" class="touch-action-btn dim-confirm-btn" disabled>↵ Đặt DIM</button>
-<label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><span>Kiểu DIM</span><select id="dimMode" class="bg-slate-900 text-sky-200 rounded px-1 py-1"><option value="aligned">Thẳng 2 điểm</option><option value="horizontal">Ngang</option><option value="vertical">Dọc</option></select></label>
-<label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimSnap" type="checkbox" checked class="accent-sky-400"><span>Object Snap</span></label>
-<label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimVisibleToggle" type="checkbox" checked onchange="setDimensionsVisible(this.checked)" class="accent-emerald-400"><span>Hiện DIM</span></label>
-<button type="button" onclick="undoMeasure()" class="touch-action-btn">↶ Xóa DIM cuối</button>
-<button type="button" onclick="clearMeasures()" class="touch-action-btn">🗑 Xóa tất cả</button>
-<button id="applyWallUpdate" type="button" onclick="applyWallUpdate()" class="touch-action-btn border-amber-400 text-amber-200">↻ Cập nhật vách</button>
-<span id="measureInfo" class="text-emerald-300" aria-live="polite">Desktop: chọn điểm 1 → Space → điểm 2 → Space → vị trí đặt DIM → Space.</span>
-</div>
-<!-- 2D SUPER-HIDPI 2.75x VECTOR CANVAS -->
+        <button id="measureToggle" type="button" onclick="toggleMeasure()" class="touch-action-btn">📐 Tạo DIM</button>
+        <button id="confirmDimPoint1" type="button" onclick="confirmDimPoint(1)" class="touch-action-btn dim-confirm-btn" disabled>① Xác nhận điểm 1</button>
+        <button id="confirmDimPoint2" type="button" onclick="confirmDimPoint(2)" class="touch-action-btn dim-confirm-btn" disabled>② Điểm 2</button>
+        <button id="confirmDimPlacement" type="button" onclick="confirmDimPlacement()" class="touch-action-btn dim-confirm-btn" disabled>↵ Đặt DIM</button>
+        <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><span>Kiểu DIM</span><select id="dimMode" class="bg-slate-900 text-sky-200 rounded px-1 py-1"><option value="aligned">Thẳng 2 điểm</option><option value="horizontal">Ngang</option><option value="vertical">Dọc</option></select></label>
+        <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimSnap" type="checkbox" checked class="accent-sky-400"><span>Object Snap</span></label>
+        <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimVisibleToggle" type="checkbox" checked onchange="setDimensionsVisible(this.checked)" class="accent-emerald-400"><span>Hiện DIM</span></label>
+        <button type="button" onclick="undoMeasure()" class="touch-action-btn">↶ Xóa DIM cuối</button>
+        <button type="button" onclick="clearMeasures()" class="touch-action-btn">🗑 Xóa tất cả</button>
+        <button id="applyWallUpdate" type="button" onclick="applyWallUpdate()" class="touch-action-btn border-amber-400 text-amber-200">↻ Cập nhật vách</button>
+        <span id="measureInfo" class="text-emerald-300" aria-live="polite">Desktop: chọn điểm 1 → Space → điểm 2 → Space → vị trí đặt DIM → Space.</span>
+      </div>
+
+      <!-- 2D SUPER-HIDPI 2.75x VECTOR CANVAS -->
       <div id="canvasContainer" class="relative h-[640px] min-h-[620px] max-h-[680px] rounded-2xl viewport-autocad border border-slate-800 overflow-hidden cursor-grab active:cursor-grabbing shadow-2xl">
         <canvas id="cadCanvas" class="absolute inset-0 w-full h-full block"></canvas><canvas id="measureOverlay" class="absolute inset-0 w-full h-full" style="pointer-events:auto;touch-action:none"></canvas>
         <div class="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] mono text-slate-400 pointer-events-none">
@@ -567,11 +561,11 @@
           </select>
         </div>
         <div id="platesDetailGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-    <section class="cad-panel rounded-xl p-3 flex flex-wrap items-center gap-3" aria-label="QR bản vẽ và tác giả">
-      <div class="flex items-center gap-2"><div id="drawingQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div><div class="text-xs"><b class="text-sky-300">QR dữ liệu bản vẽ</b><div class="text-slate-400">Quét để lưu thông số và truy xuất lại dữ liệu</div></div></div>
-      <div class="flex items-center gap-2"><div id="authorQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div><div class="text-xs"><b class="text-amber-300">Tác giả</b><div class="text-slate-300">Nguyễn Thị Minh Thư</div><div class="text-slate-400">“người con Nam Bộ 🤞”</div></div></div>
-      <button type="button" class="touch-action-btn" onclick="downloadDrawingMetadata()">Tải JSON dữ liệu</button>
-    </section>
+        <section class="cad-panel rounded-xl p-3 flex flex-wrap items-center gap-3 mt-3" aria-label="QR bản vẽ và tác giả">
+          <div class="flex items-center gap-2"><div id="drawingQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div><div class="text-xs"><b class="text-sky-300">QR dữ liệu bản vẽ</b><div class="text-slate-400">Quét để lấy dữ liệu chép vào Excel</div></div></div>
+          <div class="flex items-center gap-2"><div id="authorQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div><div class="text-xs"><b class="text-amber-300">Tác giả</b><div class="text-slate-300">Nguyễn Thị Minh Thư</div><div class="text-slate-400">“người con Nam Bộ 🤞”</div></div></div>
+          <button type="button" class="touch-action-btn" onclick="downloadDrawingMetadata()">Tải JSON dữ liệu</button>
+        </section>
       </div>
 
     </section>
