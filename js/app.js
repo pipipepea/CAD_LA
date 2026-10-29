@@ -130,7 +130,7 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
 // ============================================================================
 
 window.APP_STATE = {
-  items: [], // Khởi tạo mảng trống, không nạp sẵn dữ liệu mẫu
+  items: [], // Khởi tạo mảng trống khi mở trang
   selectedIndex: 0,
   excelCollapsed: false,
   orientationMatrixOpen: true,
@@ -1173,8 +1173,6 @@ window.refreshDrawingQRCodes = function() {
   const a = document.getElementById("authorQr");
   if (!d || !a) return;
 
-  // Chuỗi dữ liệu thuần túy theo bố cục file Excel đầu vào để chép (Copy-Paste)
-  // Các trường: Mã hàng | Tên sản phẩm | Dài SP | Rộng SP | Cao SP | Khách hàng | Ghi chú
   const excelColumnsText = toUtf8ByteString(
     [
       item.partCode || "",
@@ -1184,7 +1182,7 @@ window.refreshDrawingQRCodes = function() {
       item.pH || 0,
       item.customer || "",
       item.note || ""
-    ].join("\t") // Sử dụng dấu tab (\t) để khi quét/dán tự động nhảy đúng các cột Excel
+    ].join("\t")
   );
 
   const authorQrText = toUtf8ByteString(
@@ -1338,7 +1336,6 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof resize3DViewer === "function") resize3DViewer();
   });
 
-  // Không gọi hàm nạp dữ liệu mẫu nữa, để trống giao diện khi mở trang
   renderMainCanvas();
 });
 
