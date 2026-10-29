@@ -136,9 +136,60 @@
   <!-- MAIN WORKSPACE -->
   <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-    <!-- LEFT SIDEBAR -->
+    <!-- LEFT SIDEBAR (ĐÃ ĐƯA BẢNG MÀU VÀO TRONG KHUNG THÔNG SỐ NÀY) -->
     <aside class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl">
       <div>
+        <!-- COLOR SWATCH & WALL CODE BAR (Đặt ngay trên cùng của cột thông số) -->
+        <div class="section-card">
+          <div class="section-title">
+            <span>BẢNG MÀU & MÃ VÁCH</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+              <input id="col_VD" type="color" value="#facc15" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+              <div class="leading-tight min-w-0">
+                <div class="text-[10px] font-bold text-white truncate">Vách Dọc</div>
+                <div id="lbl_codeVD" class="text-[9px] mono text-yellow-400 truncate">DD001-VD</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+              <input id="col_VN" type="color" value="#f472b6" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+              <div class="leading-tight min-w-0">
+                <div class="text-[10px] font-bold text-white truncate">Vách Ngang</div>
+                <div id="lbl_codeVN" class="text-[9px] mono text-pink-400 truncate">DD001-VN</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+              <input id="col_BD" type="color" value="#4ade80" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+              <div class="leading-tight min-w-0">
+                <div class="text-[10px] font-bold text-white truncate">Biên Dọc</div>
+                <div id="lbl_codeBD" class="text-[9px] mono text-emerald-400 truncate">DD001-BD</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+              <input id="col_BN" type="color" value="#fb923c" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+              <div class="leading-tight min-w-0">
+                <div class="text-[10px] font-bold text-white truncate">Biên Ngang</div>
+                <div id="lbl_codeBN" class="text-[9px] mono text-orange-400 truncate">DD001-BN</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+              <input id="col_SLOT" type="color" value="#f87171" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+              <div class="leading-tight min-w-0">
+                <div class="text-[10px] font-bold text-white truncate">Rãnh Đan</div>
+                <div class="text-[9px] mono text-rose-400 truncate">Âm dương</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+              <input id="col_FRAME" type="color" value="#38bdf8" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+              <div class="leading-tight min-w-0">
+                <div class="text-[10px] font-bold text-white truncate">Viền & DIM</div>
+                <div class="text-[9px] mono text-sky-400 truncate">Khung bao</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 1. KÍCH THƯỚC PHỦ BÌ -->
         <div class="section-card">
           <div class="section-title">
@@ -389,53 +440,7 @@
     <!-- RIGHT WORKSPACE -->
     <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
 
-      <!-- COLOR SWATCH & WALL CODE BAR (Đã chuyển lên vị trí phía trên theo yêu cầu) -->
-      <div class="cad-panel rounded-2xl p-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
-        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 overflow-hidden">
-          <input id="col_VD" type="color" value="#facc15" onchange="updateWallColors()" class="w-7 h-7 shrink-0 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-          <div class="leading-tight min-w-0">
-            <div class="text-[11px] font-bold text-white truncate">Vách Dọc (VD)</div>
-            <div id="lbl_codeVD" class="text-[10px] mono text-yellow-400 truncate">DD001-VD</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 overflow-hidden">
-          <input id="col_VN" type="color" value="#f472b6" onchange="updateWallColors()" class="w-7 h-7 shrink-0 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-          <div class="leading-tight min-w-0">
-            <div class="text-[11px] font-bold text-white truncate">Vách Ngang (VN)</div>
-            <div id="lbl_codeVN" class="text-[10px] mono text-pink-400 truncate">DD001-VN</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 overflow-hidden">
-          <input id="col_BD" type="color" value="#4ade80" onchange="updateWallColors()" class="w-7 h-7 shrink-0 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-          <div class="leading-tight min-w-0">
-            <div class="text-[11px] font-bold text-white truncate">Biên Dọc (BD)</div>
-            <div id="lbl_codeBD" class="text-[10px] mono text-emerald-400 truncate">DD001-BD</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 overflow-hidden">
-          <input id="col_BN" type="color" value="#fb923c" onchange="updateWallColors()" class="w-7 h-7 shrink-0 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-          <div class="leading-tight min-w-0">
-            <div class="text-[11px] font-bold text-white truncate">Biên Ngang (BN)</div>
-            <div id="lbl_codeBN" class="text-[10px] mono text-orange-400 truncate">DD001-BN</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 overflow-hidden">
-          <input id="col_SLOT" type="color" value="#f87171" onchange="updateWallColors()" class="w-7 h-7 shrink-0 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-          <div class="leading-tight min-w-0">
-            <div class="text-[11px] font-bold text-white truncate">Rãnh Đan (SLOT)</div>
-            <div class="text-[10px] mono text-rose-400 truncate">Cắt rãnh âm dương</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 overflow-hidden">
-          <input id="col_FRAME" type="color" value="#38bdf8" onchange="updateWallColors()" class="w-7 h-7 shrink-0 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-          <div class="leading-tight min-w-0">
-            <div class="text-[11px] font-bold text-white truncate">Viền Phủ Bì & DIM</div>
-            <div class="text-[10px] mono text-sky-400 truncate">Khung bao chuẩn</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEWPORT TOOLBAR (Đã chuyển xuống vị trí thanh màu xanh dương cũ) -->
+      <!-- VIEWPORT TOOLBAR (Đã đưa lên vị trí thanh màu xanh dương cũ) -->
       <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
