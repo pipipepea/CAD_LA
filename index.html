@@ -14,10 +14,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css" />
-  <style>
-    /* CSS chuẩn cho trạng thái thu gọn cột thông số */
-    .sidebar-collapsed { display: none !important; }
-  </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
 
@@ -137,270 +133,271 @@
     </div>
   </section>
 
-  <!-- THANH NÚT ĐỘC LẬP NẰM Ở VÙNG VÀNG -->
-  <div class="max-w-[1920px] w-full mx-auto px-4 pt-3">
-    <div class="flex items-center gap-2">
-      <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition flex items-center gap-2 shadow-lg" title="Thu gọn / Mở rộng bảng thông số">
-        <span id="toggleIcon">◀</span> <span>Bảng Thông Số</span>
-      </button>
-    </div>
-  </div>
+  <!-- MAIN WORKSPACE (Dùng chuẩn 2 cột Grid: Cột trái thông số, Cột phải bản vẽ) -->
+  <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
 
-  <!-- MAIN WORKSPACE (Dùng Flexbox để cố định vị trí cột bên trái và phần bản vẽ bên phải) -->
-  <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 flex flex-col lg:flex-row gap-4 items-start">
-
-    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ BÊN TRÁI - RỘNG CHUẨN 320px HOẶC 350px) -->
-    <aside id="sidebarPanel" class="w-full lg:w-[360px] xl:w-[400px] shrink-0 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl transition-all duration-300">
+    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ BÊN TRÁI - LUÔN CỐ ĐỊNH ỔN ĐỊNH Ở TRANG CHÍNH) -->
+    <aside id="sidebarPanel" class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl">
       <div>
-        <!-- COLOR SWATCH & WALL CODE BAR -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>BẢNG MÀU & MÃ VÁCH</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_VD" type="color" value="#facc15" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Vách Dọc</div>
-                <div id="lbl_codeVD" class="text-[9px] mono text-yellow-400 truncate">DD001-VD</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_VN" type="color" value="#f472b6" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Vách Ngang</div>
-                <div id="lbl_codeVN" class="text-[9px] mono text-pink-400 truncate">DD001-VN</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_BD" type="color" value="#4ade80" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Biên Dọc</div>
-                <div id="lbl_codeBD" class="text-[9px] mono text-emerald-400 truncate">DD001-BD</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_BN" type="color" value="#fb923c" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Biên Ngang</div>
-                <div id="lbl_codeBN" class="text-[9px] mono text-orange-400 truncate">DD001-BN</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_SLOT" type="color" value="#f87171" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Rãnh Đan</div>
-                <div class="text-[9px] mono text-rose-400 truncate">Âm dương</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_FRAME" type="color" value="#38bdf8" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Viền & DIM</div>
-                <div class="text-[9px] mono text-sky-400 truncate">Khung bao</div>
-              </div>
-            </div>
-          </div>
+        <!-- NÚT THU GỌN NỘI DUNG BÊN TRONG CỘT THÔNG SỐ -->
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-sky-300">Bảng Thông Số Cài Đặt</span>
+          <button onclick="toggleSidebarInner()" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-bold transition">
+            <span id="sidebarToggleText">Thu gọn nội dung</span>
+          </button>
         </div>
 
-        <!-- 1. KÍCH THƯỚC PHỦ BÌ -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>1. KÍCH THƯỚC PHỦ BÌ (L × W)</span>
-            <span class="text-[10px] text-slate-400 font-normal">mm</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Dài Phủ Bì L</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_L', -5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_L" type="number" step="1" value="550" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_L', 5)" class="step-btn rounded-r-md">+</button>
-              </div>
+        <div id="sidebarInnerContent" class="space-y-3">
+          <!-- COLOR SWATCH & WALL CODE BAR -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>BẢNG MÀU & MÃ VÁCH</span>
             </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Rộng Phủ Bì W</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_W', -5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_W" type="number" step="1" value="360" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_W', 5)" class="step-btn rounded-r-md">+</button>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+                <input id="col_VD" type="color" value="#facc15" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <div class="leading-tight min-w-0">
+                  <div class="text-[10px] font-bold text-white truncate">Vách Dọc</div>
+                  <div id="lbl_codeVD" class="text-[9px] mono text-yellow-400 truncate">DD001-VD</div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. KHOẢNG LÙI BIÊN (OFFSET) -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>2. KHOẢNG LÙI BIÊN (OFFSET)</span>
-            <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
-              <input id="chk_syncOffset" type="checkbox" checked onchange="syncEqual('offset')" class="accent-sky-400" /> Đồng bộ X=Y
-            </label>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Offset Dài X (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_offX', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_offX" type="number" step="0.5" value="5" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_offX', 1)" class="step-btn rounded-r-md">+</button>
+              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+                <input id="col_VN" type="color" value="#f472b6" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <div class="leading-tight min-w-0">
+                  <div class="text-[10px] font-bold text-white truncate">Vách Ngang</div>
+                  <div id="lbl_codeVN" class="text-[9px] mono text-pink-400 truncate">DD001-VN</div>
+                </div>
               </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Offset Rộng Y (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_offY', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_offY" type="number" step="0.5" value="5" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_offY', 1)" class="step-btn rounded-r-md">+</button>
+              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+                <input id="col_BD" type="color" value="#4ade80" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <div class="leading-tight min-w-0">
+                  <div class="text-[10px] font-bold text-white truncate">Biên Dọc</div>
+                  <div id="lbl_codeBD" class="text-[9px] mono text-emerald-400 truncate">DD001-BD</div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. ĐỘ DÀY VÁCH BIÊN NGOÀI -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>3. ĐỘ DÀY VÁCH BIÊN NGOÀI</span>
-            <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
-              <input id="chk_syncBorder" type="checkbox" checked onchange="syncEqual('border')" class="accent-sky-400" /> Đồng bộ
-            </label>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Biên Dọc BD (X)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_bX', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_bX" type="number" step="0.5" value="0" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_bX', 1)" class="step-btn rounded-r-md">+</button>
+              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+                <input id="col_BN" type="color" value="#fb923c" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <div class="leading-tight min-w-0">
+                  <div class="text-[10px] font-bold text-white truncate">Biên Ngang</div>
+                  <div id="lbl_codeBN" class="text-[9px] mono text-orange-400 truncate">DD001-BN</div>
+                </div>
               </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Biên Ngang BN (Y)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_bY', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_bY" type="number" step="0.5" value="0" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_bY', 1)" class="step-btn rounded-r-md">+</button>
+              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+                <input id="col_SLOT" type="color" value="#f87171" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <div class="leading-tight min-w-0">
+                  <div class="text-[10px] font-bold text-white truncate">Rãnh Đan</div>
+                  <div class="text-[9px] mono text-rose-400 truncate">Âm dương</div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. ĐỘ DÀY VÁCH NGĂN TRONG -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>4. ĐỘ DÀY VÁCH NGĂN TRONG</span>
-            <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
-              <input id="chk_syncInner" type="checkbox" checked onchange="syncEqual('inner')" class="accent-sky-400" /> Đồng bộ
-            </label>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Vách Dọc VD (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_tX', -0.5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_tX" type="number" step="0.5" value="4" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_tX', 0.5)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Vách Ngang VN (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_tY', -0.5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_tY" type="number" step="0.5" value="4" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_tY', 0.5)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. CHIA Ô & PHÂN VÙNG -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>5. CHIA Ô & PHÂN VÙNG</span>
-          </div>
-          <select id="sel_divMode" onchange="onDivModeChange()" class="cad-input mb-2.5 font-semibold text-sky-300">
-            <option value="cells">Chế độ: SỐ LƯỢNG Ô (Dài × Rộng)</option>
-            <option value="size">Chế độ: KÍCH THƯỚC Ô MONG MUỐN</option>
-          </select>
-
-          <div id="divMode_cellsBox" class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Số ô Dài (X)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_nx', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_nx" type="number" min="1" step="1" value="2" class="cad-input rounded-none text-center font-bold text-amber-300" />
-                <button onclick="stepVal('inp_nx', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Số ô Rộng (Y)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_ny', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_ny" type="number" min="1" step="1" value="10" class="cad-input rounded-none text-center font-bold text-amber-300" />
-                <button onclick="stepVal('inp_ny', 1)" class="step-btn rounded-r-md">+</button>
+              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
+                <input id="col_FRAME" type="color" value="#38bdf8" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <div class="leading-tight min-w-0">
+                  <div class="text-[10px] font-bold text-white truncate">Viền & DIM</div>
+                  <div class="text-[9px] mono text-sky-400 truncate">Khung bao</div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div id="divMode_sizeBox" class="hidden grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Lọt lòng Dài X (mm)</label>
-              <input id="inp_desX" type="number" step="1" value="200" class="cad-input text-center" />
+          <!-- 1. KÍCH THƯỚC PHỦ BÌ -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>1. KÍCH THƯỚC PHỦ BÌ (L × W)</span>
+              <span class="text-[10px] text-slate-400 font-normal">mm</span>
             </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Lọt lòng Rộng Y (mm)</label>
-              <input id="inp_desY" type="number" step="1" value="20" class="cad-input text-center" />
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Dài Phủ Bì L</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_L', -5)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_L" type="number" step="1" value="550" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_L', 5)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Rộng Phủ Bì W</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_W', -5)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_W" type="number" step="1" value="360" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_W', 5)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 6. TÁCH CHI TIẾT & RÃNH ĐAN -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>6. TÁCH CHI TIẾT & RÃNH ĐAN</span>
-          </div>
-          <div class="grid grid-cols-3 gap-2 mb-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Cao VD (mm)</label>
-              <input id="inp_hVD" type="number" value="189" class="cad-input text-center" />
+          <!-- 2. KHOẢNG LÙI BIÊN (OFFSET) -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>2. KHOẢNG LÙI BIÊN (OFFSET)</span>
+              <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
+                <input id="chk_syncOffset" type="checkbox" checked onchange="syncEqual('offset')" class="accent-sky-400" /> Đồng bộ X=Y
+              </label>
             </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Cao VN (mm)</label>
-              <input id="inp_hVN" type="number" value="189" class="cad-input text-center" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Cao Bao (mm)</label>
-              <input id="inp_hBao" type="number" value="189" class="cad-input text-center" />
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2 mb-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Rộng rãnh</label>
-              <input id="inp_slotW" type="number" step="0.05" value="4.25" class="cad-input text-center text-rose-300" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Sâu rãnh VD</label>
-              <input id="inp_slotDepthVD" type="number" step="0.5" value="94.5" class="cad-input text-center" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Sâu rãnh VN</label>
-              <input id="inp_slotDepthVN" type="number" step="0.5" value="94.5" class="cad-input text-center" />
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Offset Dài X (mm)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_offX', -1)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_offX" type="number" step="0.5" value="5" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_offX', 1)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Offset Rộng Y (mm)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_offY', -1)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_offY" type="number" step="0.5" value="5" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_offY', 1)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Rãnh VD cắt từ</label>
-              <select id="sel_cutVD" class="cad-input text-xs">
-                <option value="top" selected>Mép trên xuống</option>
-                <option value="bottom">Mép dưới lên</option>
-              </select>
+
+          <!-- 3. ĐỘ DÀY VÁCH BIÊN NGOÀI -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>3. ĐỘ DÀY VÁCH BIÊN NGOÀI</span>
+              <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
+                <input id="chk_syncBorder" type="checkbox" checked onchange="syncEqual('border')" class="accent-sky-400" /> Đồng bộ
+              </label>
             </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Rãnh VN cắt từ</label>
-              <select id="sel_cutVN" class="cad-input text-xs">
-                <option value="bottom" selected>Mép dưới lên</option>
-                <option value="top">Mép trên xuống</option>
-              </select>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Biên Dọc BD (X)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_bX', -1)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_bX" type="number" step="0.5" value="0" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_bX', 1)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Biên Ngang BN (Y)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_bY', -1)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_bY" type="number" step="0.5" value="0" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_bY', 1)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. ĐỘ DÀY VÁCH NGĂN TRONG -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>4. ĐỘ DÀY VÁCH NGĂN TRONG</span>
+              <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
+                <input id="chk_syncInner" type="checkbox" checked onchange="syncEqual('inner')" class="accent-sky-400" /> Đồng bộ
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Vách Dọc VD (mm)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_tX', -0.5)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_tX" type="number" step="0.5" value="4" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_tX', 0.5)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Vách Ngang VN (mm)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_tY', -0.5)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_tY" type="number" step="0.5" value="4" class="cad-input rounded-none text-center" />
+                  <button onclick="stepVal('inp_tY', 0.5)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. CHIA Ô & PHÂN VÙNG -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>5. CHIA Ô & PHÂN VÙNG</span>
+            </div>
+            <select id="sel_divMode" onchange="onDivModeChange()" class="cad-input mb-2.5 font-semibold text-sky-300">
+              <option value="cells">Chế độ: SỐ LƯỢNG Ô (Dài × Rộng)</option>
+              <option value="size">Chế độ: KÍCH THƯỚC Ô MONG MUỐN</option>
+            </select>
+
+            <div id="divMode_cellsBox" class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Số ô Dài (X)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_nx', -1)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_nx" type="number" min="1" step="1" value="2" class="cad-input rounded-none text-center font-bold text-amber-300" />
+                  <button onclick="stepVal('inp_nx', 1)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Số ô Rộng (Y)</label>
+                <div class="flex">
+                  <button onclick="stepVal('inp_ny', -1)" class="step-btn rounded-l-md">-</button>
+                  <input id="inp_ny" type="number" min="1" step="1" value="10" class="cad-input rounded-none text-center font-bold text-amber-300" />
+                  <button onclick="stepVal('inp_ny', 1)" class="step-btn rounded-r-md">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="divMode_sizeBox" class="hidden grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Lọt lòng Dài X (mm)</label>
+                <input id="inp_desX" type="number" step="1" value="200" class="cad-input text-center" />
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-300 block mb-1">Lọt lòng Rộng Y (mm)</label>
+                <input id="inp_desY" type="number" step="1" value="20" class="cad-input text-center" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. TÁCH CHI TIẾT & RÃNH ĐAN -->
+          <div class="section-card">
+            <div class="section-title">
+              <span>6. TÁCH CHI TIẾT & RÃNH ĐAN</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Cao VD (mm)</label>
+                <input id="inp_hVD" type="number" value="189" class="cad-input text-center" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Cao VN (mm)</label>
+                <input id="inp_hVN" type="number" value="189" class="cad-input text-center" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Cao Bao (mm)</label>
+                <input id="inp_hBao" type="number" value="189" class="cad-input text-center" />
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Rộng rãnh</label>
+                <input id="inp_slotW" type="number" step="0.05" value="4.25" class="cad-input text-center text-rose-300" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Sâu rãnh VD</label>
+                <input id="inp_slotDepthVD" type="number" step="0.5" value="94.5" class="cad-input text-center" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Sâu rãnh VN</label>
+                <input id="inp_slotDepthVN" type="number" step="0.5" value="94.5" class="cad-input text-center" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Rãnh VD cắt từ</label>
+                <select id="sel_cutVD" class="cad-input text-xs">
+                  <option value="top" selected>Mép trên xuống</option>
+                  <option value="bottom">Mép dưới lên</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Rãnh VN cắt từ</label>
+                <select id="sel_cutVN" class="cad-input text-xs">
+                  <option value="bottom" selected>Mép dưới lên</option>
+                  <option value="top">Mép trên xuống</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -450,8 +447,8 @@
       </div>
     </aside>
 
-    <!-- RIGHT WORKSPACE (VÙNG BẢN VẼ BÊN PHẢI - TỰ ĐỘNG CHIẾM TRỌN KHÔNG GIAN KHI ẨN SIDEBAR) -->
-    <section id="mainContentSection" class="flex-1 min-w-0 flex flex-col gap-3 transition-all duration-300">
+    <!-- RIGHT WORKSPACE (VÙNG BẢN VẼ BÊN PHẢI) -->
+    <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
 
       <!-- VIEWPORT TOOLBAR -->
       <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
@@ -603,25 +600,20 @@
     </section>
   </main>
 
-  <!-- SCRIPT ĐIỀU KHIỂN TRẠNG THÁI FLEXBOX CHUẨN XÁC -->
+  <!-- SCRIPT THU GỌN / MỞ RỘNG NỘI DUNG TRONG CỘT THÔNG SỐ AN TOÀN -->
   <script>
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebarPanel');
-      const toggleIcon = document.getElementById('toggleIcon');
+    function toggleSidebarInner() {
+      const content = document.getElementById('sidebarInnerContent');
+      const textBtn = document.getElementById('sidebarToggleText');
       
-      if (sidebar.classList.contains('sidebar-collapsed')) {
-        // Mở lại: Trả về trạng thái hiển thị bên cạnh trái
-        sidebar.classList.remove('sidebar-collapsed');
-        sidebar.style.display = 'flex';
-        toggleIcon.textContent = "◀";
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        textBtn.textContent = 'Thu gọn nội dung';
       } else {
-        // Thu gọn: Ẩn cột bên trái, phần bản vẽ tự động giãn đầy màn hình
-        sidebar.classList.add('sidebar-collapsed');
-        sidebar.style.display = 'none';
-        toggleIcon.textContent = "▶";
+        content.style.display = 'none';
+        textBtn.textContent = 'Mở rộng nội dung';
       }
       
-      // Kích hoạt vẽ lại canvas mượt mà
       setTimeout(() => {
         window.dispatchEvent(new Event('resize'));
         if (typeof renderMainCanvas === 'function') renderMainCanvas();
