@@ -1022,7 +1022,7 @@ function resetCanvasView() {
 }
 
 // ============================================================================
-// HÀM XUẤT FILE DXF AN TOÀN (ĐÃ KIỂM TRA DỮ LIỆU ĐẦU VÀO TRÁNH LỖI CRASH)
+// HÀM XUẤT FILE DXF AN TOÀN & TỐI ƯU HÓA MÃ HÓA QR CHỐNG TRÀN BỘ ĐỆM
 // ============================================================================
 function exportMasterDXF() {
   if (!checkExportAuth()) return;
@@ -1189,7 +1189,7 @@ window.downloadDrawingMetadata = function(){
 };
 
 // ============================================================================
-// CẬP NHẬT MÃ QR DỮ LIỆU BẢN VẼ: ĐỊNH DẠNG CHUẨN ĐỂ COPY VÀO EXCEL (KHÔNG KÈM MÃ KHÓA)
+// CẬP NHẬT MÃ QR DỮ LIỆU BẢN VẼ: RÚT GỌN NỘI DUNG & DÙNG CORRECT LEVEL M CHỐNG TRÀN
 // ============================================================================
 window.refreshDrawingQRCodes = function() {
   if (!window.QRCode) return;
@@ -1207,7 +1207,7 @@ window.refreshDrawingQRCodes = function() {
       item.pW || 0,
       item.pH || 0,
       item.customer || "",
-      item.note || ""
+      `Cells:${g.totalCells}(${g.nx}x${g.ny})`
     ].join("\t")
   );
 
@@ -1222,7 +1222,7 @@ window.refreshDrawingQRCodes = function() {
         text: excelColumnsText,
         width: 76,
         height: 76,
-        correctLevel: QRCode.CorrectLevel.L
+        correctLevel: QRCode.CorrectLevel.M
       });
     }
   } catch (err) {
@@ -1285,4 +1285,549 @@ window.addEventListener("DOMContentLoaded", () => {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
         
-        const _0x2b
+        const _0x2b = function(s) { return btoa(unescape(encodeURIComponent(s))); };
+        let _0xauth = 0; 
+        
+        for(let r = 0; r < rows.length; r++) {
+           if(!rows[r]) continue;
+           for(let c = 0; c < rows[r].length; c++) {
+              const val = String(rows[r][c] || "").trim();
+              const bval = _0x2b(val);
+              if (bval === "Q+G6o20gxqFuIE1U") { 
+                 _0xauth = 2;
+                 break;
+              } else if (bval === "Q2FtIMahbiBOUA==" || bval === "Q+G6o20gxqFuIE5Q") { 
+                 _0xauth = 1;
+              }
+           }
+           if(_0xauth === 2) break;
+        }
+
+        if (_0xauth === 0) {
+          triggerDRMLockdown();
+        } else {
+          window.APP_STATE.isAuthorized = true;
+          window.APP_STATE.canExport = (_0xauth === 2);
+          
+          const formArea = document.querySelector("main > aside");
+          if (formArea) {
+            formArea.style.pointerEvents = "auto";
+            formArea.style.opacity = "1";
+          }
+          document.querySelectorAll("button").forEach(btn => {
+            btn.disabled = false;
+            btn.style.cursor = "pointer";
+            btn.title = "";
+          });
+          if (window.APP_STATE.countdownTimer) {
+             clearInterval(window.APP_STATE.countdownTimer);
+          }
+        }
+
+        const parsed = parseExcelRowsToItems(rows);
+        if (parsed.length > 0) {
+          window.APP_STATE.items = parsed;
+          selectExcelItem(0);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  const vp = document.getElementById("canvasContainer");
+  if (vp) {
+    vp.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      zoomCanvas(e.deltaY < 0 ? 1.12 : 0.89);
+    }, { passive: false });
+
+    vp.addEventListener("mousedown", (e) => {
+      window.APP_STATE.isPanning = true;
+      window.APP_STATE.startPanX = e.clientX - window.APP_STATE.panX;
+      window.APP_STATE.startPanY = e.clientY - window.APP_STATE.panY;
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!window.APP_STATE.isPanning) return;
+      window.APP_STATE.panX = e.clientX - window.APP_STATE.startPanX;
+      window.APP_STATE.panY = e.clientY - window.APP_STATE.startPanY;
+      renderMainCanvas();
+    });
+    window.addEventListener("mouseup", () => {
+      window.APP_STATE.isPanning = false;
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    renderMainCanvas();
+    if (typeof resize3DViewer === "function") resize3DViewer();
+  });
+
+  renderMainCanvas();
+});
+
+function drawTechnicalArrow(ctx, x1, y1, x2, y2, color, text, offset, lineScale, ui) {
+  if (!ui) ui = 1;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.0 * lineScale;
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 6 * ui) {
+    ctx.restore();
+    return;
+  }
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+
+  const off = offset * ui;
+  const sx1 = snapPx(x1 + nx * off);
+  const sy1 = snapPx(y1 + ny * off);
+  const sx2 = snapPx(x2 + nx * off);
+  const sy2 = snapPx(y2 + ny * off);
+
+  ctx.beginPath();
+  ctx.setLineDash([2, 2]);
+  ctx.moveTo(snapPx(x1), snapPx(y1));
+  ctx.lineTo(sx1, sy1);
+  ctx.moveTo(snapPx(x2), snapPx(y2));
+  ctx.lineTo(sx2, sy2);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(sx1, sy1);
+  ctx.lineTo(sx2, sy2);
+  ctx.stroke();
+
+  const aLen = 6.5 * ui;
+  const aWid = 2.6 * ui;
+  ctx.beginPath();
+  ctx.moveTo(sx1, sy1);
+  ctx.lineTo(sx1 + ux * aLen + nx * aWid, sy1 + uy * aLen + ny * aWid);
+  ctx.lineTo(sx1 + ux * aLen - nx * aWid, sy1 + uy * aLen - ny * aWid);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(sx2, sy2);
+  ctx.lineTo(sx2 - ux * aLen + nx * aWid, sy2 - uy * aLen + ny * aWid);
+  ctx.lineTo(sx2 - ux * aLen - nx * aWid, sy2 - uy * aLen - ny * aWid);
+  ctx.closePath();
+  ctx.fill();
+
+  const mx = (sx1 + sx2) / 2;
+  const my = (sy1 + sy2) / 2;
+  ctx.font = `700 ${10.5 * ui}px 'JetBrains Mono', monospace`;
+  const tw = ctx.measureText(text).width;
+
+  ctx.save();
+  ctx.translate(mx, my);
+  if (Math.abs(dx) < Math.abs(dy)) {
+    ctx.rotate(-Math.PI / 2);
+  }
+  const bgFill = window.APP_STATE && window.APP_STATE.bgTheme === "paper" ? "rgba(248, 250, 252, 0.95)" : "rgba(4, 7, 14, 0.94)";
+  ctx.fillStyle = bgFill;
+  ctx.fillRect(-tw / 2 - 5 * ui, -7.5 * ui, tw + 10 * ui, 15 * ui);
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+  ctx.restore();
+}
+
+function snapPx(val) {
+  return Math.round(val) + 0.5;
+}
+
+function renderMainCanvas() {
+  const is3DMode = (window.APP_STATE.viewMode === "3d");
+
+  if (is3DMode) {
+    if (typeof rebuild3DScene === "function") rebuild3DScene();
+    
+    const threeHolder = document.getElementById("threeCanvasHolder");
+    if (threeHolder) {
+      let overlay3d = document.getElementById("drm3dOverlay");
+      if (!window.APP_STATE.isAuthorized) {
+        if (!overlay3d) {
+          overlay3d = document.createElement("div");
+          overlay3d.id = "drm3dOverlay";
+          overlay3d.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,23,42,0.82);z-index:99;pointer-events:none;backdrop-filter:blur(4px);";
+          threeHolder.style.position = "relative";
+          threeHolder.appendChild(overlay3d);
+        }
+        overlay3d.innerHTML = `
+          <div style="font-weight:900;font-size:28px;color:#ef4444;text-align:center;text-shadow:0 2px 10px rgba(0,0,0,0.8);margin-bottom:10px;padding:0 20px;">VUI LÒNG TẢI FILE THÔNG TIN CẦN LAYOUT VÁCH</div>
+          <div style="font-weight:900;font-size:64px;color:#facc15;text-shadow:0 2px 15px rgba(0,0,0,0.9);">00:${String(window.APP_STATE.countdownSecs).padStart(2, '0')}</div>
+        `;
+      } else if (overlay3d) {
+        overlay3d.remove();
+      }
+    }
+    return;
+  } else {
+    const overlay3d = document.getElementById("drm3dOverlay");
+    if (overlay3d) overlay3d.remove();
+  }
+
+  const canvas = document.getElementById("cadCanvas");
+  const container = document.getElementById("canvasContainer");
+  if (!canvas || !container) return;
+
+  const dpr = window.APP_STATE.isExporting ? window.APP_STATE.exportDpr : Math.max(window.devicePixelRatio || 1, 2.75);
+  
+  let rectWidth, rectHeight;
+  if (window.APP_STATE.isExporting) {
+    rectWidth = window.APP_STATE.exportW / dpr;
+    rectHeight = window.APP_STATE.exportH / dpr;
+  } else {
+    const rect = container.getBoundingClientRect();
+    rectWidth = rect.width;
+    rectHeight = rect.height;
+  }
+
+  canvas.width = Math.floor(rectWidth * dpr);
+  canvas.height = Math.floor(rectHeight * dpr);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.clearRect(0, 0, rectWidth, rectHeight);
+
+  const g = computeCadGeometry();
+  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
+  const plates = getPlatesCatalog(g, item);
+  const c = window.APP_STATE.colors;
+  const isPaper = window.APP_STATE.bgTheme === "paper";
+  const lineScale = window.APP_STATE.lineWeightMode === "hairline" ? 0.82 : window.APP_STATE.lineWeightMode === "bold" ? 1.45 : 1.08;
+
+  const masterLayout = computeMasterWorldLayout(g, item, plates);
+  
+  const layoutOnlyLeftPad = 250; 
+  const totalWorldW = window.APP_STATE.viewMode === "master" ? masterLayout.worldW : (g.L + layoutOnlyLeftPad + 120);
+  const totalWorldH = window.APP_STATE.viewMode === "master" ? masterLayout.worldH : (g.W + 280); 
+
+  const baseScale = Math.min((rectWidth - 60) / totalWorldW, (rectHeight - 60) / totalWorldH);
+  const scale = Math.max(0.08, baseScale * window.APP_STATE.zoom);
+  const ui = scale * 1.8;
+
+  const drawW = totalWorldW * scale;
+  const drawH = totalWorldH * scale;
+  
+  const originX = (rectWidth - drawW) / 2 + window.APP_STATE.panX + (window.APP_STATE.viewMode === "master" ? Math.abs(masterLayout.frameLeft) * scale : layoutOnlyLeftPad * scale);
+  const originY = (rectHeight - drawH) / 2 + window.APP_STATE.panY + (window.APP_STATE.viewMode === "master" ? (masterLayout.frameTop - g.W) * scale : 160 * scale); 
+
+  window.cadMeasureTransform = { originX, originY, scale, width: rectWidth, height: rectHeight };
+  const toScreenX = (mmX) => originX + mmX * scale;
+  const toScreenY = (mmYFromTop) => originY + mmYFromTop * scale;
+  if (typeof redrawMeasures === "function") requestAnimationFrame(redrawMeasures);
+
+  if (window.APP_STATE.viewMode === "master") {
+    const fx = snapPx(toScreenX(masterLayout.frameLeft));
+    const fy = snapPx(toScreenY(g.W - masterLayout.frameTop));
+    const fw = Math.round(masterLayout.worldW * scale);
+    const fh = Math.round(masterLayout.worldH * scale);
+
+    ctx.fillStyle = isPaper ? "rgba(255, 255, 255, 0.96)" : "rgba(6, 10, 20, 0.90)";
+    ctx.fillRect(fx, fy, fw, fh);
+    ctx.strokeStyle = isPaper ? "#475569" : "rgba(148, 163, 184, 0.45)";
+    ctx.lineWidth = 1.0 * lineScale;
+    ctx.strokeRect(fx, fy, fw, fh);
+    ctx.strokeStyle = c.frame;
+    ctx.lineWidth = 1.5 * lineScale;
+    ctx.strokeRect(fx + 6 * ui, fy + 6 * ui, fw - 12 * ui, fh - 12 * ui);
+  }
+
+  ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
+  ctx.font = `800 ${12 * ui}px 'JetBrains Mono', monospace`;
+  ctx.textAlign = "left";
+  ctx.fillText(`I. MẶT BẰNG LAYOUT VÁCH NGĂN 2D (TỔNG: ${g.totalCells} Ô = ${g.nx}×${g.ny})`, toScreenX(0), toScreenY(-75)); 
+
+  if (document.getElementById("chk_showBoxIn")?.checked && item) {
+    const diffX = (item.boxIn.L - g.L) / 2;
+    const diffY = (item.boxIn.W - g.W) / 2;
+    ctx.save();
+    ctx.strokeStyle = "rgba(16, 185, 129, 0.55)";
+    ctx.lineWidth = 1.1 * lineScale;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(snapPx(toScreenX(-diffX)), snapPx(toScreenY(-diffY)), Math.round(item.boxIn.L * scale), Math.round(item.boxIn.W * scale));
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.strokeStyle = isPaper ? "#0369a1" : c.frame;
+  ctx.lineWidth = 1.8 * lineScale;
+  ctx.strokeRect(snapPx(toScreenX(0)), snapPx(toScreenY(0)), Math.round(g.L * scale), Math.round(g.W * scale));
+  ctx.restore();
+
+  if (g.offX > 0 || g.offY > 0) {
+    ctx.save();
+    ctx.strokeStyle = isPaper ? "#64748b" : "#94a3b8";
+    ctx.lineWidth = 0.9 * lineScale;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeRect(snapPx(toScreenX(g.offX)), snapPx(toScreenY(g.offY)), Math.round((g.L - 2 * g.offX) * scale), Math.round((g.W - 2 * g.offY) * scale));
+    ctx.restore();
+  }
+
+  const showPart = document.getElementById("chk_showPart")?.checked;
+  const fp = window.APP_STATE.activeFootprint;
+
+  for (let ix = 0; ix < g.nx; ix++) {
+    for (let iy = 0; iy < g.ny; iy++) {
+      const cx = g.offX + g.bX + ix * (g.cellX + g.tX);
+      const cy = g.offY + g.bY + iy * (g.cellY + g.tY);
+      const sx = toScreenX(cx);
+      const sy = toScreenY(cy);
+      const sw = g.cellX * scale;
+      const sh = g.cellY * scale;
+
+      if (showPart && fp) {
+        const fits = fp.x <= g.cellX + 0.05 && fp.y <= g.cellY + 0.05;
+        const pw = Math.min(fp.x, g.cellX) * scale;
+        const ph = Math.min(fp.y, g.cellY) * scale;
+        const px = sx + (sw - pw) / 2;
+        const py = sy + (sh - ph) / 2;
+
+        ctx.fillStyle = fits ? "rgba(16, 185, 129, 0.14)" : "rgba(239, 68, 68, 0.22)";
+        ctx.strokeStyle = fits ? "rgba(16, 185, 129, 0.65)" : "rgba(239, 68, 68, 0.85)";
+        ctx.lineWidth = 0.85 * lineScale;
+        ctx.fillRect(px, py, pw, ph);
+        ctx.strokeRect(snapPx(px), snapPx(py), Math.round(pw), Math.round(ph));
+      }
+
+      if (sw > 18 * ui && sh > 11 * ui) {
+        const cellNum = iy * g.nx + ix + 1;
+        ctx.fillStyle = isPaper ? "#334155" : "rgba(226, 232, 240, 0.78)";
+        ctx.font = `600 ${Math.min(sw, sh) * 0.28}px 'JetBrains Mono', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`#${cellNum}`, sx + sw / 2, sy + sh / 2);
+      }
+    }
+  }
+
+  const showWallCodes = document.getElementById("chk_showWallCodes")?.checked;
+
+  ctx.save();
+  ctx.fillStyle = c.vd;
+  ctx.strokeStyle = isPaper ? "#854d0e" : "#fef08a";
+  ctx.lineWidth = 0.85 * lineScale;
+  if (document.getElementById("chk_showVD")?.checked !== false) g.vWalls.forEach((wx, idx) => {
+    const sx = snapPx(toScreenX(wx));
+    const sy = snapPx(toScreenY(g.offY + g.bY));
+    const sw = Math.max(1.5, g.tX * scale);
+    const sh = Math.round((g.W - 2 * (g.offY + g.bY)) * scale);
+    ctx.fillRect(sx, sy, sw, sh);
+    ctx.strokeRect(sx, sy, sw, sh);
+
+    if (showWallCodes) {
+      ctx.fillStyle = isPaper ? "#a16207" : c.vd;
+      ctx.font = `700 ${9 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "center";
+      ctx.fillText(`VD${idx + 1}`, sx + sw / 2, sy - 6 * ui);
+      ctx.fillStyle = c.vd;
+    }
+  });
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = c.vn;
+  ctx.strokeStyle = isPaper ? "#9d174d" : "#fbcfe8";
+  ctx.lineWidth = 0.85 * lineScale;
+  if (document.getElementById("chk_showVN")?.checked !== false) g.hWalls.forEach((wy, idx) => {
+    const sx = snapPx(toScreenX(g.offX + g.bX));
+    const sy = snapPx(toScreenY(wy));
+    const sw = Math.round((g.L - 2 * (g.offX + g.bX)) * scale);
+    const sh = Math.max(1.5, g.tY * scale);
+    ctx.fillRect(sx, sy, sw, sh);
+    ctx.strokeRect(sx, sy, sw, sh);
+
+    if (showWallCodes) {
+      const outerLeftX = snapPx(toScreenX(0));
+      ctx.save();
+      ctx.strokeStyle = isPaper ? "rgba(190, 24, 93, 0.45)" : "rgba(244, 114, 182, 0.45)";
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(outerLeftX - 3 * ui, sy + sh / 2);
+      ctx.lineTo(sx, sy + sh / 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = isPaper ? "#be185d" : c.vn;
+      ctx.font = `700 ${9.5 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`VN${idx + 1}`, outerLeftX - 5 * ui, sy + sh / 2);
+      ctx.fillStyle = c.vn;
+    }
+  });
+  ctx.restore();
+
+  ctx.fillStyle = c.slot;
+  g.vWalls.forEach(wx => {
+    g.hWalls.forEach(wy => {
+      ctx.fillRect(snapPx(toScreenX(wx) - 1), snapPx(toScreenY(wy) - 1), Math.max(3, g.tX * scale + 2), Math.max(3, g.tY * scale + 2));
+    });
+  });
+
+  drawTechnicalArrow(ctx, toScreenX(0), toScreenY(0), toScreenX(g.L), toScreenY(0), c.frame, `DÀI PHỦ BÌ L = ${g.L.toFixed(1)} mm`, -14, lineScale, ui);
+  
+  const leftOutsideOffsetPx = 65; 
+  drawTechnicalArrow(ctx, toScreenX(0), toScreenY(0), toScreenX(0), toScreenY(g.W), c.frame, `RỘNG PHỦ BÌ W = ${g.W.toFixed(1)} mm`, leftOutsideOffsetPx, lineScale, ui);
+
+  if (g.nx > 0 && g.cellX > 0) {
+    const cx0 = g.offX + g.bX;
+    drawTechnicalArrow(ctx, toScreenX(cx0), toScreenY(g.W), toScreenX(cx0 + g.cellX), toScreenY(g.W), c.vd, `Ô X = ${g.cellX.toFixed(1)}`, 35, lineScale, ui);
+  }
+
+  if (g.ny > 0 && g.cellY > 0) {
+    const cy0 = g.offY + g.bY;
+    drawTechnicalArrow(ctx, toScreenX(g.L), toScreenY(cy0), toScreenX(g.L), toScreenY(cy0 + g.cellY), c.vn, `Ô Y = ${g.cellY.toFixed(1)}`, -26, lineScale, ui);
+  }
+
+  if (window.APP_STATE.viewMode === "master") {
+    ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
+    ctx.font = `800 ${12 * ui}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "left";
+    ctx.fillText("II. BẢN VẼ TÁCH CHI TIẾT TỪNG TẤM VÁCH & RÃNH ĐAN (MÀU RIÊNG)", toScreenX(masterLayout.rightColX), toScreenY(-75)); 
+
+    masterLayout.platePlacements.forEach(pp => {
+      const p = pp.plate;
+      const px = snapPx(toScreenX(pp.x));
+      const py = snapPx(toScreenY(g.W - pp.topY));
+      const pw = Math.round(pp.width * scale);
+      const ph = Math.round(pp.height * scale);
+
+      ctx.fillStyle = p.color;
+      ctx.font = `700 ${10.5 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "left";
+      ctx.fillText(`■ ${pp.index}. MÃ VÁCH: ${p.code} (${p.title}) — SL: ${p.qty} TẤM`, px, py - (pp.rotateCoords ? 26 * ui : 12 * ui));
+
+      ctx.fillStyle = p.color + "16";
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 1.5 * lineScale;
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeRect(px, py, pw, ph);
+
+      p.slots.forEach(sc => {
+        const sx = snapPx(toScreenX(pp.x + sc - p.slotW / 2));
+        const sw = Math.max(2, p.slotW * scale);
+        const sh = Math.round(p.slotDepth * scale);
+        const sy = p.cutFrom === "top" ? py : (py + ph - sh);
+        ctx.fillStyle = c.slot + "40";
+        ctx.strokeStyle = c.slot;
+        ctx.lineWidth = 1.05 * lineScale;
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeRect(sx, sy, sw, sh);
+      });
+
+      const dimOffset = 20; 
+      drawTechnicalArrow(ctx, px, py + ph, px + pw, py + ph, p.color, `DÀI ${p.shortType} = ${p.length.toFixed(1)} mm (${p.slots.length} rãnh rộng ${p.slotW.toFixed(2)} × sâu ${p.slotDepth.toFixed(1)}mm)`, dimOffset, lineScale, ui);
+      
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.font = `700 ${10 * ui}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`KT PHÔI: ${p.length.toFixed(1)}×${p.height.toFixed(1)}×${p.thick}mm`, px + pw / 2, py + ph + (42 * ui));
+      ctx.restore();
+      
+      drawTechnicalArrow(ctx, px + pw, py, px + pw, py + ph, p.color, `CAO = ${p.height.toFixed(1)}`, -20, lineScale, ui);
+    });
+
+    const bx = snapPx(toScreenX(masterLayout.bomX));
+    const by = snapPx(toScreenY(g.W - masterLayout.bomTopY));
+    const bw = Math.round(masterLayout.bomW * scale);
+    const bh = Math.round(masterLayout.bomBoxH * scale);
+
+    ctx.fillStyle = isPaper ? "rgba(241, 245, 249, 0.98)" : "rgba(10, 17, 32, 0.96)";
+    ctx.strokeStyle = c.frame;
+    ctx.lineWidth = 1.5 * lineScale;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeRect(bx, by, bw, bh);
+
+    ctx.fillStyle = "rgba(56, 189, 248, 0.14)";
+    ctx.fillRect(bx, by, bw, 24 * ui);
+    ctx.beginPath();
+    ctx.moveTo(bx, snapPx(by + 24 * ui));
+    ctx.lineTo(bx + bw, snapPx(by + 24 * ui));
+    ctx.stroke();
+
+    const midX = snapPx(bx + bw * 0.48);
+    ctx.beginPath();
+    ctx.moveTo(midX, by);
+    ctx.lineTo(midX, by + bh);
+    ctx.stroke();
+
+    ctx.fillStyle = isPaper ? "rgba(3, 105, 161, 0.95)" : "rgba(56, 189, 248, 0.95)";
+    ctx.font = `800 ${10 * ui}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "left";
+    ctx.fillText("III. THÔNG TIN SẢN PHẨM & QUY CÁCH ĐÓNG GÓI", bx + 10 * ui, by + 16 * ui);
+    ctx.fillText("BẢNG KÊ CHI TIẾT CÁC VÁCH NGĂN (MÃ VÁCH & MÀU RIÊNG)", midX + 10 * ui, by + 16 * ui);
+
+    const ruleCheck = checkTotalMatchesRule(g.totalCells, getRuleConfig());
+    ctx.fillStyle = isPaper ? "#0f172a" : "#f1f5f9";
+    ctx.font = `600 ${9 * ui}px 'JetBrains Mono', monospace`;
+    const infoLines = [
+      `• Mã hàng: ${item ? item.partCode : "N/A"} | KH: ${item ? item.customer : "SECVN"}`,
+      `• Tên SP : ${item ? item.partName : "N/A"}`,
+      `• KT SP  : ${item ? `${item.pL}×${item.pW}×${item.pH}` : "N/A"} mm`,
+      `• Box In : ${item ? `${item.boxIn.L}×${item.boxIn.W}×${item.boxIn.H}` : ""} mm`,
+      `• Layout : Phủ bì ${g.L}×${g.W}×H${g.hVD} | ${g.totalCells} ô (${g.nx}×${g.ny})`,
+      `• Lọt lòng 1 ô: ${g.cellX.toFixed(1)}×${g.cellY.toFixed(1)} mm`
+    ];
+    infoLines.forEach((ln, idx) => {
+      ctx.fillText(ln, bx + 10 * ui, by + (38 + idx * 16) * ui);
+    });
+
+    plates.forEach((p, idx) => {
+      const ry = by + (40 + idx * 22) * ui;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(midX + 10 * ui, ry - 7 * ui, 8 * ui, 8 * ui);
+      ctx.fillText(`${p.code} | KT:${p.length.toFixed(1)}×${p.height.toFixed(1)} | SL:${p.qty}`, midX + 24 * ui, ry);
+    });
+
+    const qrSize = 64 * ui;
+    const qrAuthorX = snapPx(bx + bw - qrSize - 16 * ui);
+    const qrAuthorY = snapPx(by + bh - qrSize - 16 * ui); 
+    
+    ctx.save();
+    ctx.fillStyle = isPaper ? "rgba(255,255,255,0.95)" : "rgba(10,17,32,0.96)";
+    ctx.fillRect(qrAuthorX - 6 * ui, qrAuthorY - 6 * ui, qrSize + 12 * ui, qrSize + 12 * ui);
+    ctx.strokeStyle = c.frame;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(qrAuthorX - 6 * ui, qrAuthorY - 6 * ui, qrSize + 12 * ui, qrSize + 12 * ui);
+    ctx.restore();
+    
+    drawQrCodeOnContext(ctx, "authorQr", qrAuthorX, qrAuthorY, qrSize);
+  }
+  
+  if (!window.APP_STATE.isAuthorized) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.fillStyle = "rgba(15, 23, 42, 0.78)"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(-Math.PI / 6);
+    
+    ctx.fillStyle = "rgba(239, 68, 68, 0.85)";
+    ctx.font = `900 ${52 * (canvas.width/1500)}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("VUI LÒNG TẢI FILE THÔNG TIN CẦN LAYOUT VÁCH", 0, -60 * (canvas.width/1500));
+    
+    ctx.fillStyle = "rgba(250, 204, 21, 0.90)";
+    ctx.font = `900 ${100 * (canvas.width/1500)}px sans-serif`;
+    ctx.fillText("00:" + String(window.APP_STATE.countdownSecs).padStart(2, '0'), 0, 50 * (canvas.width/1500));
+    ctx.restore();
+  }
+
+  document.getElementById("zoomStatus").textContent = `Zoom: ${Math.round(window.APP_STATE.zoom * 100)}% • Super-HiDPI ${dpr.toFixed(2)}x`;
+}
