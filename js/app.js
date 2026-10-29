@@ -158,7 +158,7 @@ window.APP_STATE = {
     frame: "#38bdf8"
   },
   isAuthorized: true,    
-  canExport: true,       
+  canExport: true,        
   countdownSecs: 50,
   countdownTimer: null
 };
@@ -325,8 +325,8 @@ function renderOrientationMatrix() {
         ${
           ev.feasible && ev.maxTotal !== ev.bestTotal
             ? `<button class="btn-apply-max py-1 px-2 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 transition" title="Thử xếp tối đa số ô vật lý">
-                 Max ${ev.maxTotal} ô
-               </button>`
+                Max ${ev.maxTotal} ô
+              </button>`
             : ""
         }
       </div>
@@ -1247,10 +1247,17 @@ window.refreshDrawingQRCodes = function() {
 };
 window.applyWallUpdate = function(){updateUIAndRender();window.refreshDrawingQRCodes?.();const b=document.getElementById("applyWallUpdate");if(b){b.classList.remove("update-pending");b.classList.add("update-flash");setTimeout(()=>b.classList.remove("update-flash"),700);}const info=document.getElementById("measureInfo");if(info)info.textContent="Đã cập nhật hình học vách và bảng kê chi tiết.";};
 
-// CẬP NHẬT TÊN FILE MẪU MẶC ĐỊNH THÀNH 'Test ok.xlsx'
-function loadDefaultTesst001() {
+// ============================================================================
+// HÀM NẠP DỮ LIỆU KHỞI TẠO MẶC ĐỊNH TỪ FILE 'Test ok.xlsx'
+// ============================================================================
+function loadDefaultTestOk() {
   window.APP_STATE.items = JSON.parse(JSON.stringify(window.DEFAULT_EXCEL_ITEMS));
   selectExcelItem(0);
+  
+  const info = document.getElementById("measureInfo");
+  if (info) {
+    info.textContent = "Đã tự động nạp dữ liệu khởi tạo mặc định từ file: Test ok.xlsx";
+  }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -1313,7 +1320,6 @@ window.addEventListener("DOMContentLoaded", () => {
            if(_0xauth === 2) break;
         }
 
-        // Nếu file mẫu hoặc file không có chữ ký đúng -> Khóa hoàn toàn
         if (_0xauth === 0) {
           triggerDRMLockdown();
         } else {
@@ -1373,8 +1379,9 @@ window.addEventListener("DOMContentLoaded", () => {
     renderMainCanvas();
     if (typeof resize3DViewer === "function") resize3DViewer();
   });
-  loadDefaultTesst001();
-  setTimeout(()=>window.refreshDrawingQRCodes?.(),500);
+
+  loadDefaultTestOk();
+  setTimeout(() => window.refreshDrawingQRCodes?.(), 500);
 });
 
 function drawTechnicalArrow(ctx, x1, y1, x2, y2, color, text, offset, lineScale, ui) {
@@ -1460,7 +1467,6 @@ function snapPx(val) {
 function renderMainCanvas() {
   const is3DMode = (window.APP_STATE.viewMode === "3d");
 
-  // XỬ LÝ CHẾ ĐỘ XEM 3D HOẶC 2D
   if (is3DMode) {
     if (typeof rebuild3DScene === "function") rebuild3DScene();
     
@@ -1821,7 +1827,6 @@ function renderMainCanvas() {
     drawQrCodeOnContext(ctx, "authorQr", qrAuthorX, qrAuthorY, qrSize);
   }
   
-  // VẼ LỚP CẢNH BÁO BẢN QUYỀN CHÌM DƯỚI BẢN VẼ TRÊN CANVAS 2D
   if (!window.APP_STATE.isAuthorized) {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
