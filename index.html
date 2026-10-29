@@ -14,6 +14,10 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    /* CSS hỗ trợ thu gọn sidebar mượt mà */
+    .sidebar-collapsed { display: none !important; }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
 
@@ -136,10 +140,10 @@
   <!-- MAIN WORKSPACE -->
   <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-    <!-- LEFT SIDEBAR (ĐÃ ĐƯA BẢNG MÀU VÀO TRONG KHUNG THÔNG SỐ NÀY) -->
-    <aside class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl">
+    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ - SẼ THU GỌN VÀO NÚT VÙNG VÀNG) -->
+    <aside id="sidebarPanel" class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl transition-all duration-300">
       <div>
-        <!-- COLOR SWATCH & WALL CODE BAR (Đặt ngay trên cùng của cột thông số) -->
+        <!-- COLOR SWATCH & WALL CODE BAR -->
         <div class="section-card">
           <div class="section-title">
             <span>BẢNG MÀU & MÃ VÁCH</span>
@@ -394,7 +398,7 @@
       </div>
 
       <!-- SUMMARY & STANDARD FILENAME EXPORT BOX -->
-      <div class="bg-slate-950/95 border border-sky-500/40 rounded-xl p-3 space-y-2">
+      <div class="bg-slate-950/95 border border-sky-500/40 rounded-xl p-3 space-y-2 mt-3">
         <div class="flex items-center justify-between text-xs">
           <span class="text-slate-400">Tổng số ô tạo thành:</span>
           <div class="flex items-center gap-1.5">
@@ -437,21 +441,28 @@
       </div>
     </aside>
 
-    <!-- RIGHT WORKSPACE -->
-    <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
+    <!-- RIGHT WORKSPACE (VÙNG XANH DƯƠNG - SẼ TỰ ĐỘNG MỞ RỘNG KHI THU GỌN SIDEBAR) -->
+    <section id="mainContentSection" class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3 transition-all duration-300">
 
-      <!-- VIEWPORT TOOLBAR (Đã đưa lên vị trí thanh màu xanh dương cũ) -->
+      <!-- VIEWPORT TOOLBAR (NÚT THU GỌN NẰM Ở VÙNG VÀNG BÊN TRÁI) -->
       <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
-            📐 Bản Vẽ Ghép Tổng Hợp (Không Chồng Lấn)
+        <div class="flex items-center gap-2">
+          <!-- NÚT THU GỌN / MỞ RỘNG BẢNG THÔNG SỐ (VÙNG VÀNG) -->
+          <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition flex items-center gap-1.5 shadow-md" title="Thu gọn / Mở rộng bảng thông số">
+            <span id="toggleIcon">◀</span> <span>Bảng Thông Số</span>
           </button>
-          <button id="tabLayoutOnly" onclick="setViewMode('layout')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
-            🔍 Chỉ Xem Mặt Bằng 2D
-          </button>
-          <button id="tab3DView" onclick="setViewMode('3d')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white transition">
-            🧊 Mô Hình 3D Vách & Box
-          </button>
+
+          <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
+              📐 Bản Vẽ Ghép Tổng Hợp (Không Chồng Lấn)
+            </button>
+            <button id="tabLayoutOnly" onclick="setViewMode('layout')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+              🔍 Chỉ Xem Mặt Bằng 2D
+            </button>
+            <button id="tab3DView" onclick="setViewMode('3d')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white transition">
+              🧊 Mô Hình 3D Vách & Box
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 text-xs">
@@ -589,6 +600,35 @@
 
     </section>
   </main>
+
+  <!-- SCRIPT ĐIỀU KHIỂN THU GỌN / MỞ RỘNG SIDEBAR -->
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebarPanel');
+      const mainContent = document.getElementById('mainContentSection');
+      const toggleIcon = document.getElementById('toggleIcon');
+      
+      if (sidebar.classList.contains('sidebar-collapsed')) {
+        // Mở rộng lại sidebar
+        sidebar.classList.remove('sidebar-collapsed');
+        sidebar.style.display = 'flex';
+        mainContent.className = "lg:col-span-8 xl:col-span-9 flex flex-col gap-3 transition-all duration-300";
+        toggleIcon.textContent = "◀";
+      } else {
+        // Thu gọn sidebar, mở rộng phần bản vẽ chiếm trọn màn hình
+        sidebar.classList.add('sidebar-collapsed');
+        sidebar.style.display = 'none';
+        mainContent.className = "lg:col-span-12 xl:col-span-12 flex flex-col gap-3 transition-all duration-300";
+        toggleIcon.textContent = "▶";
+      }
+      
+      // Tự động kích hoạt lại kích thước canvas sau khi thay đổi khung
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        if (typeof renderMainCanvas === 'function') renderMainCanvas();
+      }, 300);
+    }
+  </script>
 
   <script src="./js/excel-parser.js"></script>
   <script src="./js/cad-renderer.js"></script>
