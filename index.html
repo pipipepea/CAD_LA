@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css" />
   <style>
-    /* CSS hỗ trợ ẩn/hiện cột thông số mượt mà */
+    /* CSS chuẩn cho trạng thái thu gọn cột thông số */
     .sidebar-collapsed { display: none !important; }
   </style>
 </head>
@@ -137,7 +137,7 @@
     </div>
   </section>
 
-  <!-- THANH NÚT ĐỘC LẬP DUY NHẤT NẰM Ở VÙNG VÀNG -->
+  <!-- THANH NÚT ĐỘC LẬP NẰM Ở VÙNG VÀNG -->
   <div class="max-w-[1920px] w-full mx-auto px-4 pt-3">
     <div class="flex items-center gap-2">
       <button id="toggleSidebarBtn" onclick="toggleSidebar()" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition flex items-center gap-2 shadow-lg" title="Thu gọn / Mở rộng bảng thông số">
@@ -146,11 +146,11 @@
     </div>
   </div>
 
-  <!-- MAIN WORKSPACE -->
-  <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <!-- MAIN WORKSPACE (Dùng Flexbox để cố định vị trí cột bên trái và phần bản vẽ bên phải) -->
+  <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 flex flex-col lg:flex-row gap-4 items-start">
 
-    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ) -->
-    <aside id="sidebarPanel" class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl transition-all duration-300">
+    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ BÊN TRÁI - RỘNG CHUẨN 320px HOẶC 350px) -->
+    <aside id="sidebarPanel" class="w-full lg:w-[360px] xl:w-[400px] shrink-0 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl transition-all duration-300">
       <div>
         <!-- COLOR SWATCH & WALL CODE BAR -->
         <div class="section-card">
@@ -450,10 +450,10 @@
       </div>
     </aside>
 
-    <!-- RIGHT WORKSPACE (VÙNG XANH DƯƠNG) -->
-    <section id="mainContentSection" class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3 transition-all duration-300">
+    <!-- RIGHT WORKSPACE (VÙNG BẢN VẼ BÊN PHẢI - TỰ ĐỘNG CHIẾM TRỌN KHÔNG GIAN KHI ẨN SIDEBAR) -->
+    <section id="mainContentSection" class="flex-1 min-w-0 flex flex-col gap-3 transition-all duration-300">
 
-      <!-- VIEWPORT TOOLBAR (CHỈ CHỨA CÁC NÚT CHẾ ĐỘ XEM) -->
+      <!-- VIEWPORT TOOLBAR -->
       <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
@@ -603,28 +603,25 @@
     </section>
   </main>
 
-  <!-- SCRIPT ĐIỀU KHIỂN THU GỌN / MỞ RỘNG CỘT THÔNG SỐ CHUẨN XÁC -->
+  <!-- SCRIPT ĐIỀU KHIỂN TRẠNG THÁI FLEXBOX CHUẨN XÁC -->
   <script>
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebarPanel');
-      const mainContent = document.getElementById('mainContentSection');
       const toggleIcon = document.getElementById('toggleIcon');
       
       if (sidebar.classList.contains('sidebar-collapsed')) {
-        // Phóng to trở lại: đẩy cột thông số bên trái ra lại bên cạnh
+        // Mở lại: Trả về trạng thái hiển thị bên cạnh trái
         sidebar.classList.remove('sidebar-collapsed');
         sidebar.style.display = 'flex';
-        mainContent.className = "lg:col-span-8 xl:col-span-9 flex flex-col gap-3 transition-all duration-300";
         toggleIcon.textContent = "◀";
       } else {
-        // Thu gọn: ẩn cột thông số, vùng bản vẽ bên phải mở rộng tràn màn hình
+        // Thu gọn: Ẩn cột bên trái, phần bản vẽ tự động giãn đầy màn hình
         sidebar.classList.add('sidebar-collapsed');
         sidebar.style.display = 'none';
-        mainContent.className = "lg:col-span-12 xl:col-span-12 flex flex-col gap-3 transition-all duration-300";
         toggleIcon.textContent = "▶";
       }
       
-      // Kích hoạt vẽ lại kích thước canvas tự động
+      // Kích hoạt vẽ lại canvas mượt mà
       setTimeout(() => {
         window.dispatchEvent(new Event('resize'));
         if (typeof renderMainCanvas === 'function') renderMainCanvas();
