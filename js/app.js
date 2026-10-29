@@ -57,7 +57,6 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
     "2", "ENTITIES"
   ];
 
-  // Vẽ khung chữ nhật phủ bì chính (Layout chính)
   lines.push(
     "0", "LWPOLYLINE",
     "8", "0",
@@ -69,7 +68,6 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
     "10", "0.0", "20", String(g.W)
   );
 
-  // Vẽ các vách dọc (VD)
   g.vWalls.forEach(wx => {
     lines.push(
       "0", "LINE",
@@ -79,7 +77,6 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
     );
   });
 
-  // Vẽ các vách ngang (VN)
   g.hWalls.forEach(wy => {
     lines.push(
       "0", "LINE",
@@ -89,7 +86,6 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
     );
   });
 
-  // Vẽ chi tiết các tấm vách tách rời ở cột bên phải (tránh chồng lấn)
   let offsetXPos = g.L + 550;
   plates.forEach((p, idx) => {
     let py = idx * 350; 
@@ -134,7 +130,7 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
 // ============================================================================
 
 window.APP_STATE = {
-  items: [...window.DEFAULT_EXCEL_ITEMS],
+  items: [], // Khởi tạo mảng trống, không nạp sẵn dữ liệu mẫu
   selectedIndex: 0,
   excelCollapsed: false,
   orientationMatrixOpen: true,
@@ -955,7 +951,7 @@ function onPackingRuleChange() {
   const mode = document.getElementById("packingRuleMode").value;
   document.getElementById("customMultValue").classList.toggle("hidden", mode !== "custom_mult");
   document.getElementById("exactTargetValue").classList.toggle("hidden", mode !== "exact_target");
-  selectExcelItem(window.APP_STATE.selectedIndex);
+  if(window.APP_STATE.items.length > 0) selectExcelItem(window.APP_STATE.selectedIndex);
 }
 
 function setViewMode(mode) {
@@ -1155,35 +1151,6 @@ function exportLayoutOnlyPNG() {
   renderMainCanvas();
 }
 
-function exportBomExcel() {
-  if (!checkExportAuth()) return;
-  const g = computeCadGeometry();
-  const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || window.APP_STATE.items[0];
-  const plates = getPlatesCatalog(g, item);
-  const rows = [
-    ["BẢNG KÊ THÔNG SỐ VÁCH NGĂN CAD & RÃNH ĐAN (ISO STANDARD PRO)"],
-    ["Tên file chuẩn", getMasterFileBaseName()],
-    ["Mã hàng", item.partCode, "Tên linh kiện", item.partName, "Khách hàng", item.customer],
-    ["KT Sản phẩm (mm)", `${item.pL}x${item.pW}x${item.pH}`, "KT Box In (mm)", `${item.boxIn.L}x${item.boxIn.W}x${item.boxIn.H}`, "Tổng số ô", `${g.totalCells} (${g.nx}x${g.ny})`],
-    [],
-    ["Mã Vách", "Loại Vách", "Màu Hiển Thị", "Dài Phôi (mm)", "Cao Vách (mm)", "Độ Dày (mm)", "Số Lượng / Box", "Số Rãnh Đan", "KT Rãnh (Rộng×Sâu)", "Tọa Độ Tâm Rãnh (mm)"]
-  ];
-  plates.forEach(p => {
-    rows.push([
-      p.code, p.title, p.color,
-      Number(p.length.toFixed(2)), Number(p.height.toFixed(2)), p.thick,
-      p.qty, p.slots.length,
-      p.slots.length > 0 ? `${p.slotW.toFixed(2)}x${p.slotDepth.toFixed(1)}` : "Không",
-      p.slots.map(s => s.toFixed(1)).join(", ")
-    ]);
-  });
-
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "BOM_VACH_CAD");
-  XLSX.writeFile(wb, `${getMasterFileBaseName()}.xlsx`);
-}
-
 function getDrawingMetadata() {
   const g = computeCadGeometry();
   const item = window.APP_STATE.items[window.APP_STATE.selectedIndex] || {};
@@ -1195,6 +1162,9 @@ window.downloadDrawingMetadata = function(){
   const blob=new Blob([JSON.stringify(getDrawingMetadata(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=getMasterFileBaseName()+"_metadata.json";a.click();URL.revokeObjectURL(a.href);
 };
 
+// ============================================================================
+// CẬP NHẬT MÃ QR DỮ LIỆU BẢN VẼ: ĐỊNH DẠNG CHUẨN ĐỂ COPY VÀO EXCEL (KHÔNG KÈM MÃ KHÓA)
+// ============================================================================
 window.refreshDrawingQRCodes = function() {
   if (!window.QRCode) return;
   const g = computeCadGeometry();
@@ -1203,15 +1173,19 @@ window.refreshDrawingQRCodes = function() {
   const a = document.getElementById("authorQr");
   if (!d || !a) return;
 
-  const excelQrText = [
-    `CODE:${item.partCode || "N/A"}`,
-    `SP:${item.pL || 0}x${item.pW || 0}x${item.pH || 0}`,
-    `BOX:${item.boxIn?.L || 0}x${item.boxIn?.W || 0}x${item.boxIn?.H || 0}`,
-    `PB:${g.L}x${g.W}xH${g.hVD}`,
-    `CELL:${g.totalCells}(${g.nx}x${g.ny})`,
-    `O:${g.cellX.toFixed(1)}x${g.cellY.toFixed(1)}`,
-    `T:${g.tX}`
-  ].join("|");
+  // Chuỗi dữ liệu thuần túy theo bố cục file Excel đầu vào để chép (Copy-Paste)
+  // Các trường: Mã hàng | Tên sản phẩm | Dài SP | Rộng SP | Cao SP | Khách hàng | Ghi chú
+  const excelColumnsText = toUtf8ByteString(
+    [
+      item.partCode || "",
+      item.partName || "",
+      item.pL || 0,
+      item.pW || 0,
+      item.pH || 0,
+      item.customer || "",
+      item.note || ""
+    ].join("\t") // Sử dụng dấu tab (\t) để khi quét/dán tự động nhảy đúng các cột Excel
+  );
 
   const authorQrText = toUtf8ByteString(
     "Tac gia: Nguyen Thi Minh Thu - nguoi con Nam Bo | LayoutCAD Pro"
@@ -1221,7 +1195,7 @@ window.refreshDrawingQRCodes = function() {
     if(d){
       d.innerHTML = "";
       new QRCode(d, {
-        text: excelQrText,
+        text: excelColumnsText,
         width: 76,
         height: 76,
         correctLevel: QRCode.CorrectLevel.L
@@ -1245,20 +1219,8 @@ window.refreshDrawingQRCodes = function() {
     console.warn("Author QR error:", err);
   }
 };
-window.applyWallUpdate = function(){updateUIAndRender();window.refreshDrawingQRCodes?.();const b=document.getElementById("applyWallUpdate");if(b){b.classList.remove("update-pending");b.classList.add("update-flash");setTimeout(()=>b.classList.remove("update-flash"),700);}const info=document.getElementById("measureInfo");if(info)info.textContent="Đã cập nhật hình học vách và bảng kê chi tiết.";};
 
-// ============================================================================
-// HÀM NẠP DỮ LIỆU KHỞI TẠO MẶC ĐỊNH TỪ FILE 'Test ok.xlsx'
-// ============================================================================
-function loadDefaultTestOk() {
-  window.APP_STATE.items = JSON.parse(JSON.stringify(window.DEFAULT_EXCEL_ITEMS));
-  selectExcelItem(0);
-  
-  const info = document.getElementById("measureInfo");
-  if (info) {
-    info.textContent = "Đã tự động nạp dữ liệu khởi tạo mặc định từ file: Test ok.xlsx";
-  }
-}
+window.applyWallUpdate = function(){updateUIAndRender();window.refreshDrawingQRCodes?.();const b=document.getElementById("applyWallUpdate");if(b){b.classList.remove("update-pending");b.classList.add("update-flash");setTimeout(()=>b.classList.remove("update-flash"),700);}const info=document.getElementById("measureInfo");if(info)info.textContent="Đã cập nhật hình học vách và bảng kê chi tiết.";};
 
 window.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
@@ -1299,9 +1261,6 @@ window.addEventListener("DOMContentLoaded", () => {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
         
-        // ==========================================
-        // 🔒 KIỂM TRA CHỮ KÝ BẢO MẬT THÔNG MINH (QUÉT TOÀN BỘ FILE)
-        // ==========================================
         const _0x2b = function(s) { return btoa(unescape(encodeURIComponent(s))); };
         let _0xauth = 0; 
         
@@ -1310,10 +1269,10 @@ window.addEventListener("DOMContentLoaded", () => {
            for(let c = 0; c < rows[r].length; c++) {
               const val = String(rows[r][c] || "").trim();
               const bval = _0x2b(val);
-              if (bval === "Q+G6o20gxqFuIE1U") { // "Cảm ơn MT" -> FULL
+              if (bval === "Q+G6o20gxqFuIE1U") { 
                  _0xauth = 2;
                  break;
-              } else if (bval === "Q2FtIMahbiBOUA==" || bval === "Q+G6o20gxqFuIE5Q") { // "Cam ơn NP" / "Cảm ơn NP" -> PARTIAL
+              } else if (bval === "Q2FtIMahbiBOUA==" || bval === "Q+G6o20gxqFuIE5Q") { 
                  _0xauth = 1;
               }
            }
@@ -1340,7 +1299,6 @@ window.addEventListener("DOMContentLoaded", () => {
              clearInterval(window.APP_STATE.countdownTimer);
           }
         }
-        // ==========================================
 
         const parsed = parseExcelRowsToItems(rows);
         if (parsed.length > 0) {
@@ -1380,8 +1338,8 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof resize3DViewer === "function") resize3DViewer();
   });
 
-  loadDefaultTestOk();
-  setTimeout(() => window.refreshDrawingQRCodes?.(), 500);
+  // Không gọi hàm nạp dữ liệu mẫu nữa, để trống giao diện khi mở trang
+  renderMainCanvas();
 });
 
 function drawTechnicalArrow(ctx, x1, y1, x2, y2, color, text, offset, lineScale, ui) {
