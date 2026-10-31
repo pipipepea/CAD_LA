@@ -41,6 +41,10 @@ function dxfTextEntity(x, y, size, text, layer, aciColor, rotationDeg) {
 }
 
 function buildMasterDxfContent(g, item, plates, ruleCheck) {
+  if (!ruleCheck && typeof checkTotalMatchesRule === "function" && typeof getRuleConfig === "function") {
+    ruleCheck = checkTotalMatchesRule(g.totalCells, getRuleConfig());
+  }
+  const ruleText = ruleCheck?.text || "CHUAN";
   const layout = computeMasterWorldLayout(g, item, plates);
   let dxf = "0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n";
 
@@ -157,7 +161,7 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
   dxf += dxfTextEntity(14, layout.bomTopY - 18, 10.5, "III. THONG TIN SAN PHAM & BANG KE VACH NGAN CAD (ISO STANDARD)", "VIEN_PHU_BI", 4, 0);
   dxf += dxfTextEntity(14, layout.bomTopY - 44, 8.2, `MA HANG: ${item.partCode}   |   TEN SP: ${item.partName}   |   KHACH HANG: ${item.customer}`, "THONG_TIN_BOM", 7, 0);
   dxf += dxfTextEntity(14, layout.bomTopY - 62, 8.2, `KT SAN PHAM (DxRxC): ${item.pL} x ${item.pW} x ${item.pH} mm   |   KT BOX IN: ${item.boxIn.L} x ${item.boxIn.W} x ${item.boxIn.H} mm`, "THONG_TIN_BOM", 7, 0);
-  dxf += dxfTextEntity(14, layout.bomTopY - 80, 8.2, `QUY CACH CHIA O: ${g.totalCells} O (${g.nx}x${g.ny}) [${ruleCheck.text}]   |   LOT LONG 1 O: ${g.cellX.toFixed(2)} x ${g.cellY.toFixed(2)} mm`, "VACH_BIEN_BD", 3, 0);
+  dxf += dxfTextEntity(14, layout.bomTopY - 80, 8.2, `QUY CACH CHIA O: ${g.totalCells} O (${g.nx}x${g.ny}) [${ruleText}]   |   LOT LONG 1 O: ${g.cellX.toFixed(2)} x ${g.cellY.toFixed(2)} mm`, "VACH_BIEN_BD", 3, 0);
 
   let rowY = layout.bomTopY - 106;
   plates.forEach(p => {
@@ -177,3 +181,39 @@ function buildMasterDxfContent(g, item, plates, ruleCheck) {
   dxf += "0\nENDSEC\n0\nEOF\n";
   return dxf;
 }
+
+function exportMasterDXF() {
+  if (typeof checkExportAuth === "function" && !checkExportAuth()) return;
+
+  const items = (window.APP_STATE && window.APP_STATE.items) || [];
+  if (items.length === 0) {
+    alert("Vui lòng tải lên file Excel dữ liệu hoặc chọn linh kiện trước khi xuất file DXF!");
+    return;
+  }
+
+  const g = typeof computeCadGeometry === "function" ? computeCadGeometry() : null;
+  if (!g) return;
+  const selectedIndex = (window.APP_STATE && window.APP_STATE.selectedIndex) || 0;
+  const item = items[selectedIndex] || items[0] || {
+    partCode: "SANPHAM", partName: "PARTITION", pL: 0, pW: 0, pH: 0, customer: "SECVN",
+    boxIn: { L: g.L, W: g.W, H: g.hVD }
+  };
+  const plates = getPlatesCatalog(g, item);
+  const ruleCheck = checkTotalMatchesRule(g.totalCells, getRuleConfig());
+  const dxfContent = buildMasterDxfContent(g, item, plates, ruleCheck);
+
+  const baseName = typeof getMasterFileBaseName === "function" ? getMasterFileBaseName() : `MASTER_CAD_${item.partCode}_${g.nx}x${g.ny}`;
+  const blob = new Blob([dxfContent], { type: "application/dxf;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${baseName}.dxf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+window.buildMasterDxfContent = buildMasterDxfContent;
+window.exportMasterDXF = exportMasterDXF;
+

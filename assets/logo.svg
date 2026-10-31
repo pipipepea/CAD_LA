@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bgGrad)" />
+  <rect x="8" y="8" width="104" height="104" rx="18" fill="none" stroke="rgba(56, 189, 248, 0.4)" stroke-width="2" stroke-dasharray="4,4" />
+  <!-- CAD Grid & Partitions -->
+  <rect x="24" y="24" width="72" height="72" rx="8" fill="rgba(15, 23, 42, 0.85)" stroke="url(#glowGrad)" stroke-width="3" />
+  <!-- Grid partitions -->
+  <line x1="60" y1="24" x2="60" y2="96" stroke="#facc15" stroke-width="2.5" />
+  <line x1="24" y1="48" x2="96" y2="48" stroke="#f472b6" stroke-width="2.5" />
+  <line x1="24" y1="72" x2="96" y2="72" stroke="#f472b6" stroke-width="2.5" />
+  <!-- Corner marks -->
+  <circle cx="24" cy="24" r="3.5" fill="#38bdf8" />
+  <circle cx="96" cy="24" r="3.5" fill="#38bdf8" />
+  <circle cx="24" cy="96" r="3.5" fill="#38bdf8" />
+  <circle cx="96" cy="96" r="3.5" fill="#38bdf8" />
+</svg>

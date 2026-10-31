@@ -4,46 +4,618 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📐 THÔNG SỐ VÁCH CAD — ISO STANDARD PRO</title>
-  <!-- Sử dụng emoji làm Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💩</text></svg>">
+  <link rel="icon" href="./assets/logo.svg" type="image/svg+xml" />
   <link rel="manifest" href="./manifest.json" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css?v=2.6" />
+
+  <!-- CRITICAL INLINE STYLES (Chống 100% lỗi cache CSS của trình duyệt) -->
+  <style>
+    /* Direct Dimension Ribbon */
+    /* Suppression of spin-buttons across all number inputs */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none !important;
+      margin: 0 !important;
+    }
+    input[type=number] {
+      -moz-appearance: textfield !important;
+      appearance: textfield !important;
+    }
+
+    /* Direct Dimension Ribbon */
+    .dim-ribbon {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(11, 19, 36, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 14px;
+      padding: 6px 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    }
+    .dim-ribbon-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      border-radius: 9999px;
+      padding: 3px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #f1f5f9;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .dim-ribbon-item:hover, .dim-ribbon-item.dim-focus {
+      border-color: rgba(56, 189, 248, 0.85);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+      transform: translateY(-1px);
+    }
+    .dim-ribbon-item.dim-focus {
+      animation: pulseHighlight 1s ease-in-out;
+    }
+    @keyframes pulseHighlight {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+      50% { transform: scale(1.06); box-shadow: 0 0 18px 4px rgba(56, 189, 248, 0.8); border-color: #38bdf8; }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+    }
+    .dim-btn {
+      background: #1e293b !important;
+      color: #94a3b8 !important;
+      border: 1px solid #334155 !important;
+      border-radius: 9999px !important;
+      width: 22px !important;
+      height: 22px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-weight: 800 !important;
+      font-size: 12px !important;
+      cursor: pointer !important;
+      line-height: 1 !important;
+      padding: 0 !important;
+      transition: all 0.12s;
+    }
+    .dim-btn:hover {
+      background: #0284c7 !important;
+      color: #ffffff !important;
+      border-color: #38bdf8 !important;
+      transform: scale(1.1);
+    }
+    .dim-btn:active {
+      transform: scale(0.92);
+    }
+    .dim-input {
+      background: #060b14 !important;
+      color: #38bdf8 !important;
+      border: 1px solid #334155 !important;
+      border-radius: 6px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-weight: 800 !important;
+      font-size: 11.5px !important;
+      text-align: center !important;
+      padding: 2px 3px !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+      transition: all 0.15s ease;
+    }
+    .dim-input:focus {
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35) !important;
+      background: #0d1b38 !important;
+    }
+
+    /* Slideover Drawers (Chắc chắn ẩn 100% khi đóng, không bao giờ xuất hiện ở chân trang) */
+    .slideover-drawer {
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: min(880px, 92vw) !important;
+      background: #080e1e !important;
+      border-left: 1px solid rgba(56, 189, 248, 0.3) !important;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.85) !important;
+      z-index: 9995 !important;
+      transform: translateX(100%) !important;
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      display: none !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+    }
+    .slideover-drawer.active {
+      display: flex !important;
+      transform: translateX(0) !important;
+    }
+    .drawer-backdrop {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(4, 7, 14, 0.75) !important;
+      backdrop-filter: blur(6px) !important;
+      z-index: 9990 !important;
+      display: none !important;
+    }
+    .drawer-backdrop.active {
+      display: block !important;
+    }
+    .mobile-bottom-dock {
+      display: none;
+    }
+    .mobile-bottom-sheet {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      max-height: 86vh !important;
+      background: #080f22 !important;
+      border-top: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+      border-radius: 20px 20px 0 0 !important;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.9) !important;
+      z-index: 9995 !important;
+      transform: translateY(100%) !important;
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      padding-bottom: env(safe-area-inset-bottom, 12px) !important;
+    }
+    .mobile-bottom-sheet.active {
+      transform: translateY(0) !important;
+    }
+    .touch-step-btn {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.12s;
+    }
+    .touch-step-btn:active {
+      transform: scale(0.90);
+      background: #0284c7;
+      color: #ffffff;
+    }
+    @media (max-width: 767px) {
+      .mobile-bottom-dock {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 56px !important;
+        background: rgba(7, 13, 28, 0.98) !important;
+        border-top: 1px solid rgba(56, 189, 248, 0.3) !important;
+        backdrop-filter: blur(16px) !important;
+        z-index: 9980 !important;
+        align-items: center !important;
+        justify-content: space-around !important;
+        padding: 0 4px !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.7) !important;
+      }
+      .dock-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 5px 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .dock-btn:active {
+        transform: scale(0.90);
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.15);
+      }
+      .dock-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+      main {
+        padding: 6px !important;
+        padding-bottom: 6px !important;
+        margin-bottom: 58px !important;
+      }
+      #canvasContainer {
+        min-height: unset !important;
+        height: calc(100vh - 175px) !important;
+        border-radius: 14px !important;
+      }
+      .slideover-drawer {
+        width: 100vw !important;
+      }
+      .canvas-floating-hud {
+        padding: 4px 6px !important;
+        gap: 4px !important;
+      }
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .dim-ribbon {
+        gap: 8px;
+        padding: 8px 12px;
+      }
+      .dim-btn {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 13px !important;
+      }
+      .slideover-drawer {
+        width: min(680px, 92vw) !important;
+      }
+    }
+    .canvas-floating-hud {
+      position: absolute;
+      z-index: 15;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(11, 19, 36, 0.88);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 5px 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+<body class="min-h-screen flex flex-col bg-[#050912] text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <!-- BACKDROP BLUR FOR SLIDEOVER DRAWERS -->
+  <div id="drawerBackdrop" class="drawer-backdrop" onclick="closeAllDrawers()"></div>
 
   <!-- FLOATING QUICK-PREVIEW TOOLTIP WHEN HOVERING OVER ANY EXCEL ROW -->
-  <div id="rowHoverTooltip" class="hidden"><button type="button" id="closePartPopup" aria-label="Đóng thông tin sản phẩm" onclick="closePartPopup()">×</button><div id="partPopupContent"></div></div>
+  <div id="rowHoverTooltip" class="hidden">
+    <button type="button" id="closePartPopup" aria-label="Đóng thông tin sản phẩm" onclick="closePartPopup()">×</button>
+    <div id="partPopupContent"></div>
+  </div>
 
-  <!-- HEADER STUDIO -->
-  <header class="sticky top-0 z-40 cad-panel border-b border-slate-800/90 px-4 py-2.5 shadow-2xl">
-    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-3">
-      <!-- Animated Vector Logo & Brand -->
-      <div class="flex items-center gap-3">
-        <div class="relative w-11 h-11 rounded-xl bg-slate-950 border border-sky-500/50 flex items-center justify-center logo-glow overflow-hidden shadow-lg shadow-sky-500/20">
-          <svg class="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- ========================================================================
+       TOP STUDIO HEADER (TINH GỌN, HIỆN ĐẠI, DỄ DÙNG)
+       ======================================================================== -->
+  <header class="sticky top-0 z-40 bg-[#070d1c]/95 border-b border-slate-800/90 px-3 md:px-4 py-2 backdrop-blur-md shadow-2xl">
+    <div class="max-w-[1920px] mx-auto flex items-center justify-between gap-2 md:gap-3">
+      
+      <!-- Brand & Active Part Quick Chip -->
+      <div class="flex items-center gap-2 md:gap-3 min-w-0">
+        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-slate-950 border border-sky-500/50 flex items-center justify-center logo-glow overflow-hidden shadow-lg shadow-sky-500/20 shrink-0">
+          <svg class="w-5 h-5 md:w-6 md:h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
           </svg>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base md:text-lg font-extrabold tracking-tight text-white">THÔNG SỐ VÁCH CAD</h1>
-            <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/40 rounded-full mono">ISO STANDARD PRO</span>
+        <div class="shrink-0">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm md:text-base font-extrabold tracking-tight text-white whitespace-nowrap">VÁCH CAD</span>
+            <span class="px-1.5 py-0.2 text-[8px] md:text-[9px] font-extrabold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/40 rounded-full mono shrink-0">ISO PRO</span>
           </div>
-          <p class="text-xs text-slate-400">Tự động xoay 6 tư thế 3D (Đứng / Dọc / Đặt nằm phẳng), kiểm tra điều kiện vách & xuất CAD 2D/3D</p>
+          <p class="text-[10px] md:text-[11px] text-slate-400 hidden xl:block truncate">Thiết kế Layout vách Danpla / Carton • Xuất AutoCAD DXF & 3D STEP</p>
+        </div>
+
+        <!-- ACTIVE PART SELECTOR PILL -->
+        <button id="btnOpenPartsDrawer" onclick="togglePartsDrawer()" type="button" class="flex items-center gap-1.5 px-2 md:px-3 py-1 md:py-1.5 rounded-xl bg-slate-900/90 border border-sky-500/50 hover:border-sky-400 text-xs text-white transition shadow-md group min-w-0 max-w-[140px] sm:max-w-[220px] md:max-w-[300px]">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+          <span id="topPartLabel" class="font-bold text-sky-200 mono truncate text-[11px] md:text-xs">D03SSE001 • COVER TANK</span>
+          <span class="text-[9px] md:text-[10px] bg-sky-500/20 text-sky-300 px-1 py-0.5 rounded border border-sky-400/40 font-semibold shrink-0 hidden sm:inline-block">6 Thế ▾</span>
+        </button>
+      </div>
+
+      <!-- Desktop & Tablet View Switcher & Action Buttons -->
+      <div class="hidden md:flex flex-wrap items-center gap-2">
+        
+        <!-- View Mode Switcher -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
+            📐 Ghép Tổng Hợp
+          </button>
+          <button id="tabLayoutOnly" onclick="setViewMode('layout')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+            🔍 Mặt Bằng 2D
+          </button>
+          <button id="tab3DView" onclick="setViewMode('3d')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white transition">
+            🧊 Mô Hình 3D
+          </button>
+        </div>
+
+        <!-- Slideover Drawer Triggers -->
+        <button onclick="togglePartsDrawer()" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-400 text-slate-200 text-xs font-semibold transition" title="Mở bảng dữ liệu linh kiện & Ma trận 6 tư thế">
+          📋 Dữ Liệu Excel
+        </button>
+        
+        <button onclick="toggleSettingsDrawer()" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-400 text-slate-200 text-xs font-semibold transition" title="Bảng kê chi tiết tấm vách, màu sắc & mã QR">
+          ⚙️ Bảng Kê & Cài Đặt
+        </button>
+
+        <!-- Quick File Operations -->
+        <label for="excelFileInput" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs transition">
+          <span>📂 Nạp Excel</span>
+          <input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+        </label>
+
+        <button onclick="exportMasterDXF()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition">
+          📐 Xuất DXF
+        </button>
+
+        <button onclick="export3DSTEP()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-md transition">
+          ⚙️ Xuất STEP
+        </button>
+
+        <button onclick="exportMasterPNG()" class="px-2.5 py-1.5 rounded-xl bg-indigo-600/70 hover:bg-indigo-600 text-white font-semibold text-xs transition" title="Xuất ảnh PNG 3x">
+          🖼️ PNG
+        </button>
+      </div>
+
+      <!-- Mobile Quick Actions (< 768px) -->
+      <div class="flex md:hidden items-center gap-1.5 shrink-0">
+        <button id="btnMobileViewCycle" onclick="cycleMobileView()" type="button" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-sky-500/40 text-sky-300 text-[11px] font-bold active:scale-95 transition" title="Chuyển chế độ xem">
+          <span id="txtMobileView">📐 Tổng Hợp</span>
+        </button>
+
+        <button onclick="toggleMobileExportModal()" type="button" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-[11px] font-extrabold shadow active:scale-95 transition">
+          📤 Xuất
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       THANH KÍCH THƯỚC BẢN VẼ (DESKTOP/TABLET: DOCK RIBBON | MOBILE: QUICK PILL)
+       ======================================================================== -->
+  <section class="max-w-[1920px] w-full mx-auto px-2 md:px-3 pt-1 md:pt-2.5">
+    
+    <!-- DESKTOP & TABLET DIRECT DIMENSION RIBBON (>= 768px) -->
+    <div class="dim-ribbon hidden md:flex">
+      
+      <!-- 1. Dài Phủ Bì L -->
+      <div id="dim_item_L" class="dim-ribbon-item" title="Kích thước Dài phủ bì L (mm)">
+        <span class="text-sky-300 font-bold">Dài L:</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_L', -5)" title="Giảm 5mm">-</button>
+        <input id="inp_L" type="number" step="1" value="550" oninput="updateUIAndRender()" class="dim-input" style="width:58px" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_L', 5)" title="Tăng 5mm">+</button>
+        <span class="text-[10px] text-slate-400">mm</span>
+      </div>
+
+      <!-- 2. Rộng Phủ Bì W -->
+      <div id="dim_item_W" class="dim-ribbon-item" title="Kích thước Rộng phủ bì W (mm)">
+        <span class="text-sky-300 font-bold">Rộng W:</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_W', -5)" title="Giảm 5mm">-</button>
+        <input id="inp_W" type="number" step="1" value="360" oninput="updateUIAndRender()" class="dim-input" style="width:58px" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_W', 5)" title="Tăng 5mm">+</button>
+        <span class="text-[10px] text-slate-400">mm</span>
+      </div>
+
+      <!-- 3. Phân Lưới Chia Ô (Nx x Ny) -->
+      <div id="dim_item_grid" class="dim-ribbon-item" style="border-color:rgba(251, 191, 36, 0.6)" title="Số hàng & cột chia ô (Nx × Ny)">
+        <span class="text-amber-300 font-extrabold">Chia ô:</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_nx', -1)" title="Giảm 1 ô X">-</button>
+        <input id="inp_nx" type="number" min="1" step="1" value="2" oninput="updateUIAndRender()" class="dim-input" style="width:38px;color:#facc15" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_nx', 1)" title="Tăng 1 ô X">+</button>
+        <span class="text-slate-400 font-bold">×</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_ny', -1)" title="Giảm 1 ô Y">-</button>
+        <input id="inp_ny" type="number" min="1" step="1" value="15" oninput="updateUIAndRender()" class="dim-input" style="width:38px;color:#facc15" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_ny', 1)" title="Tăng 1 ô Y">+</button>
+        <span class="text-slate-500">=</span>
+        <b id="res_totalCells" class="text-white font-extrabold">30 ô</b>
+        <span id="res_multBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ BỘI 10 OK</span>
+      </div>
+
+      <!-- 4. Độ Dày Vách T (mm) -->
+      <div id="dim_item_T" class="dim-ribbon-item" title="Độ dày tấm vách T (mm)">
+        <span class="text-pink-300 font-bold">Vách T:</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_tX', -0.5)" title="Giảm 0.5mm">-</button>
+        <input id="inp_tX" type="number" step="0.5" value="4" oninput="updateUIAndRender()" class="dim-input" style="width:40px;color:#f472b6" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_tX', 0.5)" title="Tăng 0.5mm">+</button>
+        <span class="text-[10px] text-slate-400">mm</span>
+      </div>
+
+      <!-- 5. Chiều Cao Vách H (mm) -->
+      <div id="dim_item_H" class="dim-ribbon-item" style="border-color:rgba(52, 211, 153, 0.6)" title="Chiều cao vách ngăn H (mm)">
+        <span class="text-emerald-300 font-bold">Cao H:</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_hVD', -5)" title="Giảm 5mm">-</button>
+        <input id="inp_hVD" type="number" step="1" value="189" oninput="updateUIAndRender()" class="dim-input" style="width:52px;color:#34d399" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_hVD', 5)" title="Tăng 5mm">+</button>
+        <span class="text-[10px] text-slate-400">mm</span>
+      </div>
+
+      <!-- 6. Khoảng Lùi Biên Offset (mm) -->
+      <div id="dim_item_off" class="dim-ribbon-item" title="Khoảng hở biên Offset (mm)">
+        <span class="text-slate-300 font-bold">Offset:</span>
+        <button type="button" class="dim-btn" onclick="stepVal('inp_offX', -1)" title="Giảm 1mm">-</button>
+        <input id="inp_offX" type="number" step="0.5" value="5" oninput="updateUIAndRender()" class="dim-input" style="width:38px" />
+        <button type="button" class="dim-btn" onclick="stepVal('inp_offX', 1)" title="Tăng 1mm">+</button>
+        <span class="text-[10px] text-slate-400">mm</span>
+      </div>
+
+      <!-- Quick Results Pill -->
+      <div class="ml-auto flex items-center gap-2 text-xs mono">
+        <span class="text-slate-400">Lọt lòng 1 ô:</span>
+        <b id="res_cellDim" class="text-emerald-300 font-bold">268.0 × 19.6 mm</b>
+        <span id="res_partFitBadge" class="text-[11px] font-bold text-emerald-300">✓ Vừa ô</span>
+      </div>
+
+    </div>
+
+    <!-- MOBILE QUICK DIMENSION PILL (< 768px) -->
+    <div class="md:hidden flex items-center justify-between w-full px-1 py-0.5 mb-1 gap-2">
+      <button type="button" onclick="toggleMobileDimSheet()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-sky-500/50 text-xs text-white shadow-md active:scale-95 transition min-w-0">
+        <span class="text-sky-300 font-extrabold shrink-0">📏 Kích thước:</span>
+        <span id="mob_summary_txt" class="mono font-bold text-amber-300 truncate text-[11px]">550×360 mm (30 ô)</span>
+        <span class="text-[9px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded font-bold shrink-0">Chỉnh ▾</span>
+      </button>
+      <div class="flex items-center gap-1 shrink-0">
+        <button type="button" onclick="zoomCanvas(1.2)" class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-700 text-sky-400 font-extrabold flex items-center justify-center text-xs active:scale-90 shadow" title="Phóng to">+</button>
+        <button type="button" onclick="zoomCanvas(0.8)" class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-700 text-sky-400 font-extrabold flex items-center justify-center text-xs active:scale-90 shadow" title="Thu nhỏ">-</button>
+        <button type="button" onclick="resetCanvasView()" class="px-2 h-7 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-bold text-[11px] flex items-center justify-center active:scale-90 shadow" title="Vừa màn hình">Fit</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ========================================================================
+       MAIN EXPANSIVE CAD WORKSPACE (KHÔNG CÒN BẢNG RỐI MẮT)
+       ======================================================================== -->
+  <main class="flex-1 w-full p-2 md:p-3 pt-1 md:pt-1.5 flex flex-col relative overflow-hidden">
+    
+    <!-- 2D CAD VIEWPORT CONTAINER -->
+    <div id="canvasContainer" class="relative flex-1 w-full min-h-[500px] md:min-h-[640px] h-[calc(100vh-170px)] md:h-[calc(100vh-140px)] rounded-xl md:rounded-2xl viewport-autocad border border-slate-800 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing">
+      
+      <!-- Base Drawing Canvas & Measure Overlay -->
+      <canvas id="cadCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+      <canvas id="measureOverlay" class="absolute inset-0 w-full h-full pointer-events-auto" style="touch-action:none"></canvas>
+
+      <!-- FLOATING TOP-LEFT TOOLSTRIP -->
+      <div class="canvas-floating-hud top-2 md:top-3 left-2 md:left-3 text-xs">
+        <div class="flex items-center gap-0.5 md:gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+          <button type="button" class="wall-view-btn text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1" onclick="setWallView('all')">Tất cả</button>
+          <button type="button" class="wall-view-btn text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1" onclick="setWallView('vd')">Chỉ VD</button>
+          <button type="button" class="wall-view-btn text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1" onclick="setWallView('vn')">Chỉ VN</button>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1">
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white px-1.5 py-1">
+            <input id="chk_showPart" type="checkbox" checked onchange="updateUIAndRender()" class="accent-emerald-400" />
+            <span class="text-[11px]">Phôi SP</span>
+          </label>
+
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white px-1.5 py-1">
+            <input id="chk_showBoxIn" type="checkbox" checked onchange="updateUIAndRender()" class="accent-sky-400" />
+            <span class="text-[11px]">Lòng Box In</span>
+          </label>
+
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white px-1.5 py-1">
+            <input id="chk_showWallCodes" type="checkbox" checked onchange="updateUIAndRender()" class="accent-amber-400" />
+            <span class="text-[11px]">Mã Vách</span>
+          </label>
+        </div>
+
+        <input id="chk_showVD" type="checkbox" checked onchange="updateUIAndRender()" class="hidden" />
+        <input id="chk_showVN" type="checkbox" checked onchange="updateUIAndRender()" class="hidden" />
+      </div>
+
+      <!-- FLOATING TOP-RIGHT TOOLSTRIP -->
+      <div class="canvas-floating-hud top-2 md:top-3 right-2 md:right-3 text-xs">
+        <button id="measureToggle" type="button" onclick="toggleMeasure()" class="touch-action-btn flex items-center gap-1 text-[10px] md:text-[11px] font-bold px-1.5 md:px-2 py-0.5 md:py-1">
+          📐 Đo DIM
+        </button>
+        <button id="confirmDimPoint1" type="button" onclick="confirmDimPoint(1)" class="touch-action-btn dim-confirm-btn text-[11px] hidden" disabled>① Điểm 1</button>
+        <button id="confirmDimPoint2" type="button" onclick="confirmDimPoint(2)" class="touch-action-btn dim-confirm-btn text-[11px] hidden" disabled>② Điểm 2</button>
+        <button id="confirmDimPlacement" type="button" onclick="confirmDimPlacement()" class="touch-action-btn dim-confirm-btn text-[11px] hidden" disabled>↵ Đặt</button>
+
+        <div class="hidden sm:block h-4 w-[1px] bg-slate-700"></div>
+
+        <select onchange="setBgTheme(this.value)" class="hidden sm:block bg-slate-950 text-slate-200 text-[11px] rounded px-1.5 py-1 border border-slate-700 focus:outline-none">
+          <option value="autocad" selected>Đen CAD</option>
+          <option value="blueprint">Blueprint</option>
+          <option value="paper">Giấy trắng</option>
+        </select>
+
+        <div class="hidden md:flex items-center gap-0.5 bg-slate-950 px-1 py-0.5 rounded-lg border border-slate-800">
+          <button onclick="zoomCanvas(1.18)" class="px-1.5 py-0.5 hover:bg-slate-800 rounded font-bold text-sky-400" title="Phóng to">+</button>
+          <button onclick="zoomCanvas(0.84)" class="px-1.5 py-0.5 hover:bg-slate-800 rounded font-bold text-sky-400" title="Thu nhỏ">-</button>
+          <button onclick="resetCanvasView()" class="px-1.5 py-0.5 hover:bg-slate-800 rounded text-[10px] font-bold text-slate-300" title="Căn vừa màn hình (Phím F)">Fit</button>
         </div>
       </div>
 
-      <!-- Quick Controls & File Actions -->
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1.5 bg-slate-900/95 border border-slate-700/80 rounded-xl px-2.5 py-1.5">
-          <span class="text-[11px] font-bold text-amber-300 uppercase">Quy tắc số ô:</span>
-          <select id="packingRuleMode" onchange="onPackingRuleChange()" class="bg-slate-950 text-white text-xs font-semibold rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:border-sky-400">
+      <!-- FLOATING BOTTOM STATUS BAR -->
+      <div class="absolute bottom-2 md:bottom-3 left-2 md:left-3 right-2 md:right-3 flex items-center justify-between pointer-events-none overflow-hidden">
+        <div id="bottomStatusBar" class="canvas-floating-hud text-[10px] md:text-[11px] mono text-slate-300 py-0.5 md:py-1 px-2 md:px-3 truncate max-w-full">
+          <span class="hidden sm:inline">📦 <b class="text-white">D03SSE001</b> • </span>
+          <span class="hidden md:inline">Box In: <b>555×365×230</b> • </span>
+          <span>Layout: <b class="text-sky-300">550×360</b> mm</span>
+          <span class="text-slate-600">•</span>
+          <span class="text-emerald-300">Lọt lòng: <b>268.0×19.6</b></span>
+          <span class="text-slate-600">•</span>
+          <span class="text-amber-300 font-bold"><b>30 Ô</b></span>
+        </div>
+        <div class="canvas-floating-hud text-[11px] mono text-slate-400 py-1 px-2.5 hidden md:block shrink-0">
+          <span id="zoomStatus">Zoom: 76% • Super-HiDPI 2.75x</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3D INTERACTIVE VIEWER CONTAINER -->
+    <div id="viewer3DContainer" class="hidden relative flex-1 w-full min-h-[640px] h-[calc(100vh-140px)] rounded-2xl bg-[#050912] border border-slate-800 overflow-hidden shadow-2xl">
+      <div id="threeCanvasHolder" class="w-full h-full min-h-[640px]"></div>
+
+      <div class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-auto">
+        <div class="flex flex-wrap items-center gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
+          <span class="font-bold text-amber-300">Tách đan rãnh:</span>
+          <input id="rng_explode3D" type="range" min="0" max="100" value="0" oninput="apply3DExplodeOffset(this.value)" class="w-28 accent-amber-400 cursor-pointer" />
+          <span id="lbl_explodePct" class="mono text-sky-300 w-9">0%</span>
+          <button id="btn_explodeAnim" onclick="toggle3DExplodeAnim()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 font-bold">
+            ▶ Mô phỏng đan rãnh
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input id="chk_3dShowBox" type="checkbox" checked onchange="rebuild3DScene()" class="accent-sky-400" />
+            <span>Thùng Box 3D</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input id="chk_3dShowParts" type="checkbox" checked onchange="rebuild3DScene()" class="accent-emerald-400" />
+            <span>Phôi SP 3D</span>
+          </label>
+          <button onclick="set3DCameraPreset('iso')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Iso 3D</button>
+          <button onclick="set3DCameraPreset('top')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Mặt Trên</button>
+          <button onclick="set3DCameraPreset('front')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Mặt Trước</button>
+          <button onclick="export3DSTEP()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold">
+            ⚙️ Xuất 3D .STEP
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================
+       SLIDEOVER DRAWER 1: DỮ LIỆU LINH KIỆN & MA TRẬN 6 TƯ THẾ
+       ======================================================================== -->
+  <aside id="partsDrawer" class="slideover-drawer">
+    <div class="drawer-header">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-sky-400"></span>
+        <h2 class="text-sm font-extrabold uppercase text-white tracking-wide">Dữ Liệu Linh Kiện & Ma Trận 6 Tư Thế 3D</h2>
+      </div>
+      <button onclick="closeAllDrawers()" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-500 text-slate-300 hover:text-white font-bold text-sm transition">
+        ✕ Đóng
+      </button>
+    </div>
+
+    <div class="drawer-body space-y-4">
+      
+      <!-- Packing Rule Selector Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-900/90 border border-slate-800 rounded-xl">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-amber-300 uppercase">Quy tắc đóng gói:</span>
+          <select id="packingRuleMode" onchange="onPackingRuleChange()" class="bg-slate-950 text-white text-xs font-semibold rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:border-sky-400">
             <option value="mult10" selected>Bội của 10 (10, 20, 30...)</option>
             <option value="free">Tự do (Bất kỳ số nào)</option>
             <option value="mult5">Bội của 5 (5, 10, 15...)</option>
@@ -51,552 +623,443 @@
             <option value="custom_mult">Bội số N tùy ý...</option>
             <option value="exact_target">Tổng số ô mục tiêu...</option>
           </select>
-          <input id="customMultValue" type="number" min="1" value="6" onchange="onPackingRuleChange()" class="hidden w-14 bg-slate-950 border border-amber-500/60 rounded px-1.5 py-0.5 text-xs mono text-amber-300 text-center" title="Nhập bội số N" />
-          <input id="exactTargetValue" type="number" min="1" value="24" onchange="onPackingRuleChange()" class="hidden w-16 bg-slate-950 border border-emerald-500/60 rounded px-1.5 py-0.5 text-xs mono text-emerald-300 text-center" title="Nhập tổng số ô" />
+          <input id="customMultValue" type="number" min="1" value="6" onchange="onPackingRuleChange()" class="hidden w-14 bg-slate-950 border border-amber-500/60 rounded px-1.5 py-0.5 text-xs mono text-amber-300 text-center" />
+          <input id="exactTargetValue" type="number" min="1" value="24" onchange="onPackingRuleChange()" class="hidden w-16 bg-slate-950 border border-emerald-500/60 rounded px-1.5 py-0.5 text-xs mono text-emerald-300 text-center" />
         </div>
 
-        <label for="excelFileInput" class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs shadow-lg transition">
-          <span>📂 Tải File Excel (.xlsx / .csv)</span>
-          <input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+        <label for="excelFileInput" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold">
+          📂 Tải File Mới
         </label>
+      </div>
 
-        <button onclick="exportMasterDXF()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-lg transition">
-          📐 Xuất AutoCAD (.DXF)
-        </button>
+      <!-- Quick Recommendations -->
+      <div id="recommendationBar" class="p-3 bg-slate-900/60 border border-slate-800/80 rounded-xl space-y-2">
+        <span class="text-xs font-bold text-amber-300 block">💡 Gợi ý nhanh các Layout tối ưu quy tắc:</span>
+        <div id="recommendationButtons" class="flex flex-wrap items-center gap-1.5"></div>
+      </div>
 
-        <button onclick="export3DSTEP()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg transition">
-          ⚙️ Xuất 3D CAD (.STEP)
+      <!-- Table of Excel Items -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/80">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-900 text-slate-300 border-b border-slate-800 text-[11px] uppercase">
+              <th class="px-3 py-2">#</th>
+              <th class="px-3 py-2">Mã Hàng</th>
+              <th class="px-3 py-2">Tên Linh Kiện</th>
+              <th class="px-3 py-2 text-center">KT SP (D×R×C)</th>
+              <th class="px-3 py-2">Kết Quả Nhanh</th>
+              <th class="px-3 py-2">Box In (mm)</th>
+              <th class="px-3 py-2 text-right">Chọn</th>
+            </tr>
+          </thead>
+          <tbody id="excelTableBody" class="divide-y divide-slate-800/60"></tbody>
+        </table>
+      </div>
+
+      <!-- 6-Orientation Matrix -->
+      <div class="pt-3 border-t border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-extrabold uppercase text-amber-300">🔄 Ma Trận Xoay 6 Tư Thế Sản Phẩm 3D:</span>
+          <button onclick="rotateActiveProduct90()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-400/40 text-xs font-bold">
+            ↻ Đảo Dài ↔ Rộng (Xoay 90°)
+          </button>
+        </div>
+        <div id="orientationMatrixGrid" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       SLIDEOVER DRAWER 2: BẢNG KÊ CHI TIẾT VÁCH, BOM & CÀI ĐẶT
+       ======================================================================== -->
+  <aside id="settingsDrawer" class="slideover-drawer">
+    <div class="drawer-header">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+        <h2 class="text-sm font-extrabold uppercase text-white tracking-wide">Bảng Kê Chi Tiết Vách & Cài Đặt Nâng Cao</h2>
+      </div>
+      <button onclick="closeAllDrawers()" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-500 text-slate-300 hover:text-white font-bold text-sm transition">
+        ✕ Đóng
+      </button>
+    </div>
+
+    <div class="drawer-body space-y-4">
+      
+      <!-- Detailed Plates Catalog Grid -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-extrabold uppercase text-sky-300">Danh Mục Chi Tiết Tấm Vách & Rãnh Đan</h3>
+          <select id="sel_plateFilter" onchange="renderDetachedPlatesSection()" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
+            <option value="all">Tất cả các loại vách</option>
+            <option value="VD">Chỉ Vách Dọc (VD)</option>
+            <option value="VN">Chỉ Vách Ngang (VN)</option>
+          </select>
+        </div>
+        <div id="platesDetailGrid" class="grid grid-cols-1 gap-2.5"></div>
+      </div>
+
+      <!-- Advanced Parameters Form -->
+      <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
+        <h3 class="text-xs font-extrabold uppercase text-amber-300">Thông Số Nâng Cao (Biên ngoài & Rãnh đan)</h3>
+        
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <label class="text-slate-400 block mb-1">Biên dọc BD (X)</label>
+            <input id="inp_bX" type="number" step="0.5" value="0" oninput="updateUIAndRender()" class="cad-input text-center" />
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Biên ngang BN (Y)</label>
+            <input id="inp_bY" type="number" step="0.5" value="0" oninput="updateUIAndRender()" class="cad-input text-center" />
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Rộng rãnh đan (mm)</label>
+            <input id="inp_slotW" type="number" step="0.05" value="4.25" oninput="updateUIAndRender()" class="cad-input text-center text-rose-300" />
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Cao viền bao ngoài</label>
+            <input id="inp_hBao" type="number" value="189" oninput="updateUIAndRender()" class="cad-input text-center" />
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Sâu rãnh VD</label>
+            <input id="inp_slotDepthVD" type="number" step="0.5" value="94.5" oninput="updateUIAndRender()" class="cad-input text-center" />
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Sâu rãnh VN</label>
+            <input id="inp_slotDepthVN" type="number" step="0.5" value="94.5" oninput="updateUIAndRender()" class="cad-input text-center" />
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Rãnh VD cắt từ</label>
+            <select id="sel_cutVD" onchange="updateUIAndRender()" class="cad-input text-xs">
+              <option value="top" selected>Mép trên xuống</option>
+              <option value="bottom">Mép dưới lên</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Rãnh VN cắt từ</label>
+            <select id="sel_cutVN" onchange="updateUIAndRender()" class="cad-input text-xs">
+              <option value="bottom" selected>Mép dưới lên</option>
+              <option value="top">Mép trên xuống</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Color Swatches -->
+        <div class="pt-2 border-t border-slate-800">
+          <span class="text-[11px] font-bold text-slate-300 block mb-1.5">Bảng màu hệ vách:</span>
+          <div class="grid grid-cols-3 gap-1.5 text-[10px]">
+            <label class="flex items-center gap-1 bg-slate-950 p-1 rounded border border-slate-800"><input id="col_VD" type="color" value="#facc15" onchange="updateWallColors()" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0" /><span>Vách dọc VD</span></label>
+            <label class="flex items-center gap-1 bg-slate-950 p-1 rounded border border-slate-800"><input id="col_VN" type="color" value="#f472b6" onchange="updateWallColors()" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0" /><span>Vách ngang VN</span></label>
+            <label class="flex items-center gap-1 bg-slate-950 p-1 rounded border border-slate-800"><input id="col_SLOT" type="color" value="#f87171" onchange="updateWallColors()" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0" /><span>Rãnh đan</span></label>
+            <label class="flex items-center gap-1 bg-slate-950 p-1 rounded border border-slate-800"><input id="col_FRAME" type="color" value="#38bdf8" onchange="updateWallColors()" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0" /><span>Khung & DIM</span></label>
+            <label class="flex items-center gap-1 bg-slate-950 p-1 rounded border border-slate-800"><input id="col_BD" type="color" value="#4ade80" onchange="updateWallColors()" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0" /><span>Biên dọc</span></label>
+            <label class="flex items-center gap-1 bg-slate-950 p-1 rounded border border-slate-800"><input id="col_BN" type="color" value="#fb923c" onchange="updateWallColors()" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0" /><span>Biên ngang</span></label>
+          </div>
+        </div>
+
+        <button onclick="downloadDrawingMetadata()" type="button" class="w-full py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-bold transition">
+          📥 Tải Metadata JSON
         </button>
       </div>
-    </div>
-  </header>
 
-  <!-- COLLAPSIBLE EXCEL DATA BAR (Nút thu gọn bên phải đã được kéo to, rõ ràng) -->
-  <section class="max-w-[1920px] w-full mx-auto px-4 pt-3">
-    <div class="cad-panel rounded-2xl p-3 shadow-xl border border-slate-800/90">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-          <h2 class="text-xs font-extrabold uppercase tracking-wider text-sky-300">Dữ Liệu Linh Kiện & Bảng Tự Động Xoay 6 Tư Thế Sản Phẩm</h2>
-          <span id="excelCollapsedSummary" class="hidden px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 text-[11px] mono text-sky-300 font-semibold"></span>
+      <!-- QR Codes Section -->
+      <section class="cad-panel rounded-xl p-3 flex flex-wrap items-center gap-3" aria-label="QR bản vẽ và tác giả">
+        <div class="flex items-center gap-2">
+          <div id="drawingQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div>
+          <div class="text-xs">
+            <b class="text-sky-300 block">QR dữ liệu bản vẽ</b>
+            <span class="text-slate-400 text-[11px]">Quét để nhập dữ liệu vào Excel</span>
+          </div>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btnToggleOriMatrix" onclick="toggleOrientationMatrix()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition">
-            ▲ Ẩn bảng xoay 6 tư thế
-          </button>
-          <!-- NÚT THU GỌN VÙNG DỮ LIỆU ĐÃ ĐƯỢC KÉO TO VÀ CÂN ĐỐI -->
-          <button onclick="toggleExcelPanel()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white border border-sky-400/50 text-xs font-bold shadow-md transition">
-            <span id="excelToggleIcon" class="text-sm font-extrabold">▲</span>
-            <span id="excelToggleText">Thu gọn bảng dữ liệu</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Collapsible Body -->
-      <div id="excelCollapsibleBody" class="excel-collapsible mt-2.5" style="max-height: 900px;">
-        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/75">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-900/95 text-slate-300 border-b border-slate-800 text-[11px] uppercase">
-                <th class="px-3 py-2">#</th>
-                <th class="px-3 py-2">Mã Hàng (Part Code)</th>
-                <th class="px-3 py-2">Tên Linh Kiện (Part Name)</th>
-                <th class="px-3 py-2 text-center">KT Sản Phẩm (D×R×C)</th>
-                <th class="px-3 py-2">Kết Quả Nhanh (Số Ô & KT Ô)</th>
-                <th class="px-3 py-2">KT Box (Out / In mm)</th>
-                <th class="px-3 py-2">Ghi Chú Đóng Gói</th>
-                <th class="px-3 py-2 text-right">Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody id="excelTableBody" class="divide-y divide-slate-800/60"></tbody>
-          </table>
-        </div>
-
-        <div id="recommendationBar" class="mt-2.5 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xs font-bold text-amber-300">💡 Gợi ý nhanh các Layout đạt chuẩn quy tắc:</span>
-          <div id="recommendationButtons" class="flex flex-wrap items-center gap-1.5"></div>
-        </div>
-
-        <!-- 6-ORIENTATION AUTO-ROTATION EXPLORER -->
-        <div id="orientationMatrixBody" class="mt-3 pt-3 border-t border-slate-800/90">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-extrabold uppercase tracking-wider text-amber-300">🔄 MA TRẬN TỰ ĐỘNG XOAY 6 TƯ THẾ SẢN PHẨM (ĐỨNG NGANG • ĐỨNG DỌC • ĐẶT NẰM PHẲNG):</span>
-              <span class="text-[11px] text-slate-400">Thử biến chiều Cao thành chiều Rộng / đặt nằm sản phẩm ra để kiểm tra điều kiện thỏa mãn</span>
-            </div>
-            <button onclick="rotateActiveProduct90()" class="px-3 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/35 text-sky-300 border border-sky-400/50 text-xs font-bold transition">
-              ↻ Đảo nhanh Dài ↔ Rộng sản phẩm trong ô (Xoay 90°)
-            </button>
+          <div id="authorQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div>
+          <div class="text-xs">
+            <b class="text-amber-300 block">Tác giả</b>
+            <span class="text-slate-400 text-[11px]">Nguyễn Thị Minh Thư</span>
           </div>
-          <div id="orientationMatrixGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5"></div>
         </div>
-      </div>
+      </section>
+
     </div>
-  </section>
+  </aside>
 
-  <!-- MAIN WORKSPACE (BỐ CỤC 2 CỘT CHUẨN XÁC BAN ĐẦU) -->
-  <main class="max-w-[1920px] w-full mx-auto px-4 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+  <!-- ========================================================================
+       MOBILE BOTTOM NAVIGATION DOCK (CỐ ĐỊNH ĐÁY MÀN HÌNH ĐIỆN THOẠI)
+       ======================================================================== -->
+  <nav id="mobileBottomDock" class="mobile-bottom-dock md:hidden">
+    <!-- 1. Góc nhìn -->
+    <button type="button" class="dock-btn text-sky-400" onclick="cycleMobileView()" id="dockBtn_view">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      <span id="dockTxt_view">Tổng Hợp</span>
+    </button>
 
-    <!-- LEFT SIDEBAR (CỘT THÔNG SỐ CỐ ĐỊNH Ở BÊN TRÁI) -->
-    <aside id="sidebarPanel" class="lg:col-span-4 xl:col-span-3 cad-panel rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl">
-      <div class="space-y-3">
-        <!-- COLOR SWATCH & WALL CODE BAR -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>BẢNG MÀU & MÃ VÁCH</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_VD" type="color" value="#facc15" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Vách Dọc</div>
-                <div id="lbl_codeVD" class="text-[9px] mono text-yellow-400 truncate">DD001-VD</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_VN" type="color" value="#f472b6" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Vách Ngang</div>
-                <div id="lbl_codeVN" class="text-[9px] mono text-pink-400 truncate">DD001-VN</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_BD" type="color" value="#4ade80" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Biên Dọc</div>
-                <div id="lbl_codeBD" class="text-[9px] mono text-emerald-400 truncate">DD001-BD</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_BN" type="color" value="#fb923c" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Biên Ngang</div>
-                <div id="lbl_codeBN" class="text-[9px] mono text-orange-400 truncate">DD001-BN</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_SLOT" type="color" value="#f87171" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Rãnh Đan</div>
-                <div class="text-[9px] mono text-rose-400 truncate">Âm dương</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2 py-1 overflow-hidden">
-              <input id="col_FRAME" type="color" value="#38bdf8" onchange="updateWallColors()" class="w-6 h-6 shrink-0 rounded cursor-pointer bg-transparent border-0 p-0" />
-              <div class="leading-tight min-w-0">
-                <div class="text-[10px] font-bold text-white truncate">Viền & DIM</div>
-                <div class="text-[9px] mono text-sky-400 truncate">Khung bao</div>
-              </div>
-            </div>
-          </div>
+    <!-- 2. Kích thước (Mở bộ chỉnh cảm ứng) -->
+    <button type="button" class="dock-btn text-amber-400" onclick="toggleMobileDimSheet()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+      <span>Kích thước</span>
+    </button>
+
+    <!-- 3. Linh kiện (Excel & 6 tư thế) -->
+    <button type="button" class="dock-btn" onclick="togglePartsDrawer()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <span>Linh kiện</span>
+    </button>
+
+    <!-- 4. Cài đặt (Bảng kê & Tấm vách) -->
+    <button type="button" class="dock-btn" onclick="toggleSettingsDrawer()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span>Cài đặt</span>
+    </button>
+
+    <!-- 5. Xuất File -->
+    <button type="button" class="dock-btn text-emerald-400" onclick="toggleMobileExportModal()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      <span>Xuất file</span>
+    </button>
+  </nav>
+
+  <!-- ========================================================================
+       MOBILE DIMENSION TUNER SHEET (BỘ CHỈNH KÍCH THƯỚC CẢM ỨNG ĐIỆN THOẠI)
+       ======================================================================== -->
+  <aside id="mobileDimSheet" class="mobile-bottom-sheet md:hidden">
+    <!-- Drag indicator / Pill -->
+    <div class="pt-2.5 pb-1 flex justify-center cursor-pointer" onclick="toggleMobileDimSheet(false)">
+      <div class="w-12 h-1.5 bg-slate-600/80 rounded-full"></div>
+    </div>
+
+    <!-- Sheet Header -->
+    <div class="px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-extrabold text-white">✏️ KÍCH THƯỚC LAYOUT</span>
+        <span class="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30 mono font-bold">TOUCH PRO</span>
+      </div>
+      <button type="button" onclick="toggleMobileDimSheet(false)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold">
+        ✕ Đóng
+      </button>
+    </div>
+
+    <!-- Clearance Feedback Banner -->
+    <div class="px-4 py-2 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs mono">
+      <span class="text-slate-400">Lọt lòng 1 ô: <b id="mob_res_cellDim" class="text-emerald-300 font-bold">268.0 × 19.6 mm</b></span>
+      <span id="mob_res_partFitBadge" class="text-[11px] font-bold text-emerald-300">✓ Vừa ô</span>
+    </div>
+
+    <!-- Sheet Body: Touch Stepper Controls -->
+    <div class="p-3 md:p-4 overflow-y-auto space-y-2.5 flex-1">
+      
+      <!-- 1. Dài Phủ Bì L -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-sky-300">DÀI PHỦ BÌ L (mm):</span>
+          <span class="text-[10px] text-slate-400">Bước nhảy ±5 / ±10</span>
         </div>
-
-        <!-- 1. KÍCH THƯỚC PHỦ BÌ -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>1. KÍCH THƯỚC PHỦ BÌ (L × W)</span>
-            <span class="text-[10px] text-slate-400 font-normal">mm</span>
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_L', -10)">-10</button>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_L', -5)">-5</button>
+          <div class="flex-1 text-center bg-slate-950 py-1.5 rounded-xl border border-sky-500/40">
+            <span id="mob_val_L" class="text-lg font-extrabold text-white mono">550</span>
           </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Dài Phủ Bì L</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_L', -5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_L" type="number" step="1" value="550" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_L', 5)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Rộng Phủ Bì W</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_W', -5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_W" type="number" step="1" value="360" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_W', 5)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. KHOẢNG LÙI BIÊN (OFFSET) -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>2. KHOẢNG LÙI BIÊN (OFFSET)</span>
-            <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
-              <input id="chk_syncOffset" type="checkbox" checked onchange="syncEqual('offset')" class="accent-sky-400" /> Đồng bộ X=Y
-            </label>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Offset Dài X (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_offX', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_offX" type="number" step="0.5" value="5" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_offX', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Offset Rộng Y (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_offY', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_offY" type="number" step="0.5" value="5" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_offY', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. ĐỘ DÀY VÁCH BIÊN NGOÀI -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>3. ĐỘ DÀY VÁCH BIÊN NGOÀI</span>
-            <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
-              <input id="chk_syncBorder" type="checkbox" checked onchange="syncEqual('border')" class="accent-sky-400" /> Đồng bộ
-            </label>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Biên Dọc BD (X)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_bX', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_bX" type="number" step="0.5" value="0" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_bX', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Biên Ngang BN (Y)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_bY', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_bY" type="number" step="0.5" value="0" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_bY', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. ĐỘ DÀY VÁCH NGĂN TRONG -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>4. ĐỘ DÀY VÁCH NGĂN TRONG</span>
-            <label class="flex items-center gap-1 text-[10px] text-slate-400 font-normal cursor-pointer">
-              <input id="chk_syncInner" type="checkbox" checked onchange="syncEqual('inner')" class="accent-sky-400" /> Đồng bộ
-            </label>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Vách Dọc VD (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_tX', -0.5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_tX" type="number" step="0.5" value="4" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_tX', 0.5)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Vách Ngang VN (mm)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_tY', -0.5)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_tY" type="number" step="0.5" value="4" class="cad-input rounded-none text-center" />
-                <button onclick="stepVal('inp_tY', 0.5)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. CHIA Ô & PHÂN VÙNG -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>5. CHIA Ô & PHÂN VÙNG</span>
-          </div>
-          <select id="sel_divMode" onchange="onDivModeChange()" class="cad-input mb-2.5 font-semibold text-sky-300">
-            <option value="cells">Chế độ: SỐ LƯỢNG Ô (Dài × Rộng)</option>
-            <option value="size">Chế độ: KÍCH THƯỚC Ô MONG MUỐN</option>
-          </select>
-
-          <div id="divMode_cellsBox" class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Số ô Dài (X)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_nx', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_nx" type="number" min="1" step="1" value="2" class="cad-input rounded-none text-center font-bold text-amber-300" />
-                <button onclick="stepVal('inp_nx', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Số ô Rộng (Y)</label>
-              <div class="flex">
-                <button onclick="stepVal('inp_ny', -1)" class="step-btn rounded-l-md">-</button>
-                <input id="inp_ny" type="number" min="1" step="1" value="10" class="cad-input rounded-none text-center font-bold text-amber-300" />
-                <button onclick="stepVal('inp_ny', 1)" class="step-btn rounded-r-md">+</button>
-              </div>
-            </div>
-          </div>
-
-          <div id="divMode_sizeBox" class="hidden grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Lọt lòng Dài X (mm)</label>
-              <input id="inp_desX" type="number" step="1" value="200" class="cad-input text-center" />
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-300 block mb-1">Lọt lòng Rộng Y (mm)</label>
-              <input id="inp_desY" type="number" step="1" value="20" class="cad-input text-center" />
-            </div>
-          </div>
-        </div>
-
-        <!-- 6. TÁCH CHI TIẾT & RÃNH ĐAN -->
-        <div class="section-card">
-          <div class="section-title">
-            <span>6. TÁCH CHI TIẾT & RÃNH ĐAN</span>
-          </div>
-          <div class="grid grid-cols-3 gap-2 mb-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Cao VD (mm)</label>
-              <input id="inp_hVD" type="number" value="189" class="cad-input text-center" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Cao VN (mm)</label>
-              <input id="inp_hVN" type="number" value="189" class="cad-input text-center" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Cao Bao (mm)</label>
-              <input id="inp_hBao" type="number" value="189" class="cad-input text-center" />
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2 mb-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Rộng rãnh</label>
-              <input id="inp_slotW" type="number" step="0.05" value="4.25" class="cad-input text-center text-rose-300" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Sâu rãnh VD</label>
-              <input id="inp_slotDepthVD" type="number" step="0.5" value="94.5" class="cad-input text-center" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Sâu rãnh VN</label>
-              <input id="inp_slotDepthVN" type="number" step="0.5" value="94.5" class="cad-input text-center" />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Rãnh VD cắt từ</label>
-              <select id="sel_cutVD" class="cad-input text-xs">
-                <option value="top" selected>Mép trên xuống</option>
-                <option value="bottom">Mép dưới lên</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Rãnh VN cắt từ</label>
-              <select id="sel_cutVN" class="cad-input text-xs">
-                <option value="bottom" selected>Mép dưới lên</option>
-                <option value="top">Mép trên xuống</option>
-              </select>
-            </div>
-          </div>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_L', 5)">+5</button>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_L', 10)">+10</button>
         </div>
       </div>
 
-      <!-- SUMMARY & STANDARD FILENAME EXPORT BOX -->
-      <div class="bg-slate-950/95 border border-sky-500/40 rounded-xl p-3 space-y-2 mt-3">
-        <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-400">Tổng số ô tạo thành:</span>
+      <!-- 2. Rộng Phủ Bì W -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-sky-300">RỘNG PHỦ BÌ W (mm):</span>
+          <span class="text-[10px] text-slate-400">Bước nhảy ±5 / ±10</span>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_W', -10)">-10</button>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_W', -5)">-5</button>
+          <div class="flex-1 text-center bg-slate-950 py-1.5 rounded-xl border border-sky-500/40">
+            <span id="mob_val_W" class="text-lg font-extrabold text-white mono">360</span>
+          </div>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_W', 5)">+5</button>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_W', 10)">+10</button>
+        </div>
+      </div>
+
+      <!-- 3. Chia Ô Nx x Ny -->
+      <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-2.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-amber-300">CHIA Ô (Nx × Ny):</span>
           <div class="flex items-center gap-1.5">
-            <span id="res_totalCells" class="mono font-extrabold text-white">20 ô (2 × 10)</span>
-            <span id="res_multBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">BỘI CỦA 10 OK</span>
+            <b id="mob_val_total" class="text-xs font-bold text-white mono">30 ô</b>
+            <span id="mob_res_multBadge" class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">✓ BỘI 10 OK</span>
           </div>
         </div>
-        <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-400">Hệ vách ngăn:</span>
-          <span id="res_wallsCount" class="mono font-bold text-amber-300">1 dọc × 9 ngang</span>
-        </div>
-        <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-400">Lọt lòng 1 ô (X × Y):</span>
-          <span id="res_cellDim" class="mono font-bold text-emerald-300">268.00 × 31.40 mm</span>
-        </div>
-        <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-400">Kiểm tra phôi SP:</span>
-          <span id="res_partFitBadge" class="text-[11px] mono font-bold text-emerald-300">✓ Vừa ô</span>
-        </div>
-
-        <div class="bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-1.5">
-          <span class="text-[10px] text-slate-400 block">Tên file xuất tự động:</span>
-          <span id="lbl_exportFilename" class="text-[11px] mono font-bold text-sky-300 break-all">MASTER_CAD_D03SSE001_2x15_30CELLS.dxf</span>
-        </div>
-
-        <div class="pt-1 border-t border-slate-800 grid grid-cols-2 gap-1.5">
-          <button onclick="exportMasterDXF()" class="py-2 px-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-[11px] transition">
-            📐 TẢI 2D .DXF
-          </button>
-          <button onclick="export3DSTEP()" class="py-2 px-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-[11px] transition">
-            ⚙️ TẢI 3D .STEP
-          </button>
-          <button onclick="exportMasterPNG()" class="col-span-2 py-1.5 px-2 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white font-bold text-[11px] transition">
-            🖼️ TẢI ẢNH BẢN VẼ TỔNG HỢP (.PNG - Zoom 170%)
-          </button>
-          <button onclick="exportLayoutOnlyPNG()" class="col-span-2 py-1.5 px-2 rounded-lg bg-teal-600/80 hover:bg-teal-500 text-white font-bold text-[11px] transition">
-            🖼️ TẢI ẢNH MẶT BẰNG 2D (.PNG)
-          </button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- RIGHT WORKSPACE (VÙNG BẢN VẼ BÊN PHẢI) -->
-    <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
-
-      <!-- VIEWPORT TOOLBAR (Nút thu gọn bảng dữ liệu bên trên được thiết kế cân đối, rõ đẹp) -->
-      <div class="cad-panel rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button id="tabMasterView" onclick="setViewMode('master')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 transition">
-            📐 Bản Vẽ Ghép Tổng Hợp (Không Chồng Lấn)
-          </button>
-          <button id="tabLayoutOnly" onclick="setViewMode('layout')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
-            🔍 Chỉ Xem Mặt Bằng 2D
-          </button>
-          <button id="tab3DView" onclick="setViewMode('3d')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white transition">
-            🧊 Mô Hình 3D Vách & Box
-          </button>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-          <div class="flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-            <span class="text-[11px] text-slate-400">Độ nét:</span>
-            <select onchange="setLineWeightMode(this.value)" class="bg-transparent text-sky-300 font-bold text-xs focus:outline-none">
-              <option value="hairline" selected>Nét mảnh AutoCAD (Hairline)</option>
-              <option value="standard">Tiêu chuẩn ISO</option>
-              <option value="bold">Nét đậm trình chiếu</option>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-            <span class="text-[11px] text-slate-400">Nền:</span>
-            <select onchange="setBgTheme(this.value)" class="bg-transparent text-emerald-300 font-bold text-xs focus:outline-none">
-              <option value="autocad" selected>Đen AutoCAD (#04070e)</option>
-              <option value="blueprint">Xanh Blueprint</option>
-              <option value="paper">Giấy trắng In ấn</option>
-            </select>
-          </div>
-
-          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer">
-            <input id="chk_showPart" type="checkbox" checked onchange="updateUIAndRender()" class="accent-emerald-400" />
-            <span>Phôi SP</span>
-          </label>
-          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer">
-            <input id="chk_showWallCodes" type="checkbox" checked onchange="updateUIAndRender()" class="accent-amber-400" />
-            <span>Mã Vách</span>
-          </label>
-          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer"><input id="chk_showVD" type="checkbox" checked onchange="updateUIAndRender()" class="accent-yellow-400"/><span>Vách dọc</span></label>
-          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer"><input id="chk_showVN" type="checkbox" checked onchange="updateUIAndRender()" class="accent-pink-400"/><span>Vách ngang</span></label>
-          <div class="flex items-center gap-1 bg-slate-950 px-1.5 py-1 rounded-lg border border-slate-800">
-            <button type="button" class="wall-view-btn" onclick="setWallView('all')">Tất cả</button>
-            <button type="button" class="wall-view-btn" onclick="setWallView('vd')">Chỉ VD</button>
-            <button type="button" class="wall-view-btn" onclick="setWallView('vn')">Chỉ VN</button>
-          </div>
-          <label class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer">
-            <input id="chk_showBoxIn" type="checkbox" checked onchange="updateUIAndRender()" class="accent-sky-400" />
-            <span>Lòng Box In</span>
-          </label>
-
-          <div class="flex items-center gap-1 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
-            <button onclick="zoomCanvas(1.18)" class="px-2 py-0.5 hover:bg-slate-800 rounded font-bold text-sky-400">+</button>
-            <button onclick="zoomCanvas(0.84)" class="px-2 py-0.5 hover:bg-slate-800 rounded font-bold text-sky-400">-</button>
-            <button onclick="resetCanvasView()" class="px-2 py-0.5 hover:bg-slate-800 rounded text-[11px] font-semibold text-slate-300">Fit</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="measureToolbar" class="cad-panel rounded-xl p-2 flex flex-wrap items-center gap-2 text-xs">
-        <button id="measureToggle" type="button" onclick="toggleMeasure()" class="touch-action-btn">📐 Tạo DIM</button>
-        <button id="confirmDimPoint1" type="button" onclick="confirmDimPoint(1)" class="touch-action-btn dim-confirm-btn" disabled>① Xác nhận điểm 1</button>
-        <button id="confirmDimPoint2" type="button" onclick="confirmDimPoint(2)" class="touch-action-btn dim-confirm-btn" disabled>② Điểm 2</button>
-        <button id="confirmDimPlacement" type="button" onclick="confirmDimPlacement()" class="touch-action-btn dim-confirm-btn" disabled>↵ Đặt DIM</button>
-        <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><span>Kiểu DIM</span><select id="dimMode" class="bg-slate-900 text-sky-200 rounded px-1 py-1"><option value="aligned">Thẳng 2 điểm</option><option value="horizontal">Ngang</option><option value="vertical">Dọc</option></select></label>
-        <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimSnap" type="checkbox" checked class="accent-sky-400"><span>Object Snap</span></label>
-        <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700 bg-slate-950"><input id="dimVisibleToggle" type="checkbox" checked onchange="setDimensionsVisible(this.checked)" class="accent-emerald-400"><span>Hiện DIM</span></label>
-        <button type="button" onclick="undoMeasure()" class="touch-action-btn">↶ Xóa DIM cuối</button>
-        <button type="button" onclick="clearMeasures()" class="touch-action-btn">🗑 Xóa tất cả</button>
-        <button id="applyWallUpdate" type="button" onclick="applyWallUpdate()" class="touch-action-btn border-amber-400 text-amber-200">↻ Cập nhật vách</button>
-        <span id="measureInfo" class="text-emerald-300" aria-live="polite">Desktop: chọn điểm 1 → Space → điểm 2 → Space → vị trí đặt DIM → Space.</span>
-      </div>
-
-      <!-- 2D SUPER-HIDPI 2.75x VECTOR CANVAS -->
-      <div id="canvasContainer" class="relative h-[640px] min-h-[620px] max-h-[680px] rounded-2xl viewport-autocad border border-slate-800 overflow-hidden cursor-grab active:cursor-grabbing shadow-2xl">
-        <canvas id="cadCanvas" class="absolute inset-0 w-full h-full block"></canvas><canvas id="measureOverlay" class="absolute inset-0 w-full h-full" style="pointer-events:auto;touch-action:none"></canvas>
-        <div class="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] mono text-slate-400 pointer-events-none">
-          <span id="zoomStatus">Zoom: 76% • Super-HiDPI 2.75x</span>
-        </div>
-      </div>
-
-      <!-- 3D INTERACTIVE VIEWER CONTAINER -->
-      <div id="viewer3DContainer" class="hidden relative flex-1 min-h-[620px] rounded-2xl bg-[#050912] border border-slate-800 overflow-hidden shadow-2xl">
-        <div id="threeCanvasHolder" class="w-full h-full min-h-[620px]"></div>
-
-        <!-- 3D Overlay Controls -->
-        <div class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-auto">
-          <div class="flex flex-wrap items-center gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
-            <span class="font-bold text-amber-300">Tách lắp ghép rãnh:</span>
-            <input id="rng_explode3D" type="range" min="0" max="100" value="0" oninput="apply3DExplodeOffset(this.value)" class="w-28 accent-amber-400 cursor-pointer" />
-            <span id="lbl_explodePct" class="mono text-sky-300 w-9">0%</span>
-            <button id="btn_explodeAnim" onclick="toggle3DExplodeAnim()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 font-bold">
-              ▶ Mô phỏng đan rãnh
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input id="chk_3dShowBox" type="checkbox" checked onchange="rebuild3DScene()" class="accent-sky-400" />
-              <span>Thùng Box 3D</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input id="chk_3dShowParts" type="checkbox" checked onchange="rebuild3DScene()" class="accent-emerald-400" />
-              <span>Phôi SP 3D</span>
-            </label>
-            <button onclick="set3DCameraPreset('iso')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Iso 3D</button>
-            <button onclick="set3DCameraPreset('top')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Mặt Trên</button>
-            <button onclick="set3DCameraPreset('front')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Mặt Trước</button>
-            <button onclick="export3DSTEP()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold">
-              ⚙️ Xuất 3D .STEP
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- DETACHED PLATES CATALOG -->
-      <div class="cad-panel rounded-2xl p-3.5">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-300">Danh Mục Tách Chi Tiết Tấm Vách & Tọa Độ Rãnh Đan</h3>
-          <select id="sel_plateFilter" onchange="renderDetachedPlatesSection()" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200">
-            <option value="all">Hiển thị tất cả các loại vách</option>
-            <option value="VD">Chỉ xem Vách Dọc (VD)</option>
-            <option value="VN">Chỉ xem Vách Ngang (VN)</option>
-          </select>
-        </div>
-        <div id="platesDetailGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        
-        <!-- QR SECTION -->
-        <section class="cad-panel rounded-xl p-3 flex flex-wrap items-center gap-3 mt-3" aria-label="QR bản vẽ và tác giả">
-          <div class="flex items-center gap-2">
-            <div id="drawingQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div>
-            <div class="text-xs">
-              <b class="text-sky-300">QR dữ liệu bản vẽ</b>
-              <div class="text-slate-400">Quét để lấy dữ liệu chép vào Excel</div>
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Ô X -->
+          <div class="flex items-center justify-between bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button type="button" class="touch-step-btn" style="width:36px;height:36px;min-width:36px" onclick="stepVal('inp_nx', -1)">-</button>
+            <div class="text-center">
+              <span class="text-[9px] text-slate-400 block">Số ô X</span>
+              <span id="mob_val_nx" class="text-base font-extrabold text-amber-300 mono">2</span>
             </div>
+            <button type="button" class="touch-step-btn" style="width:36px;height:36px;min-width:36px" onclick="stepVal('inp_nx', 1)">+</button>
           </div>
-          <div class="flex items-center gap-2">
-            <div id="authorQr" class="bg-white p-1 rounded" style="width:84px;height:84px"></div>
-            <div class="text-xs">
-              <b class="text-amber-300">Tác giả</b>
+          <!-- Ô Y -->
+          <div class="flex items-center justify-between bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button type="button" class="touch-step-btn" style="width:36px;height:36px;min-width:36px" onclick="stepVal('inp_ny', -1)">-</button>
+            <div class="text-center">
+              <span class="text-[9px] text-slate-400 block">Số ô Y</span>
+              <span id="mob_val_ny" class="text-base font-extrabold text-amber-300 mono">15</span>
             </div>
+            <button type="button" class="touch-step-btn" style="width:36px;height:36px;min-width:36px" onclick="stepVal('inp_ny', 1)">+</button>
           </div>
-        </section>
+        </div>
       </div>
 
-    </section>
-  </main>
+      <!-- 4. Chiều Cao Vách H -->
+      <div class="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-2.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-emerald-300">CHIỀU CAO VÁCH H (mm):</span>
+          <span class="text-[10px] text-slate-400">Đồng bộ VD, VN, Bao</span>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_hVD', -10)">-10</button>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_hVD', -5)">-5</button>
+          <div class="flex-1 text-center bg-slate-950 py-1.5 rounded-xl border border-emerald-500/40">
+            <span id="mob_val_h" class="text-lg font-extrabold text-emerald-300 mono">189</span>
+          </div>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_hVD', 5)">+5</button>
+          <button type="button" class="touch-step-btn" onclick="stepVal('inp_hVD', 10)">+10</button>
+        </div>
+      </div>
 
-  <script src="./js/excel-parser.js"></script>
-  <script src="./js/cad-renderer.js"></script>
-  <script src="./js/dxf-exporter.js"></script>
-  <script src="./js/step-exporter.js"></script>
-  <script src="./js/viewer-3d.js"></script>
-  <script src="./js/app.js"></script>
-  <script src="./js/touch-tools.js"></script>
+      <!-- 5. Độ Dày Vách T & Offset -->
+      <div class="grid grid-cols-2 gap-2">
+        <!-- Vách T -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+          <span class="text-[10px] font-bold text-pink-300 block mb-1">VÁCH T (mm):</span>
+          <div class="flex items-center justify-between bg-slate-950 p-0.5 rounded-lg">
+            <button type="button" class="touch-step-btn" style="width:32px;height:32px;min-width:32px;font-size:14px" onclick="stepVal('inp_tX', -0.5)">-</button>
+            <span id="mob_val_t" class="text-sm font-extrabold text-pink-300 mono">4</span>
+            <button type="button" class="touch-step-btn" style="width:32px;height:32px;min-width:32px;font-size:14px" onclick="stepVal('inp_tX', 0.5)">+</button>
+          </div>
+        </div>
+        <!-- Offset -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+          <span class="text-[10px] font-bold text-slate-300 block mb-1">OFFSET (mm):</span>
+          <div class="flex items-center justify-between bg-slate-950 p-0.5 rounded-lg">
+            <button type="button" class="touch-step-btn" style="width:32px;height:32px;min-width:32px;font-size:14px" onclick="stepVal('inp_offX', -0.5)">-</button>
+            <span id="mob_val_off" class="text-sm font-extrabold text-slate-200 mono">5</span>
+            <button type="button" class="touch-step-btn" style="width:32px;height:32px;min-width:32px;font-size:14px" onclick="stepVal('inp_offX', 0.5)">+</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Done Action Button -->
+    <div class="p-3 bg-slate-950 border-t border-slate-800">
+      <button type="button" onclick="toggleMobileDimSheet(false)" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-extrabold text-sm shadow-lg active:scale-98 transition">
+        ✓ Xong & Xem Bản Vẽ
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       MOBILE EXPORT ACTION SHEET (MENU XUẤT FILE TRỰC QUAN CHO ĐIỆN THOẠI)
+       ======================================================================== -->
+  <aside id="mobileExportModal" class="mobile-bottom-sheet md:hidden">
+    <div class="pt-2.5 pb-1 flex justify-center cursor-pointer" onclick="toggleMobileExportModal(false)">
+      <div class="w-12 h-1.5 bg-slate-600/80 rounded-full"></div>
+    </div>
+    <div class="px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-extrabold text-white">📤 XUẤT HỒ SƠ BẢN VẼ</span>
+        <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">CHUẨN ISO</span>
+      </div>
+      <button type="button" onclick="toggleMobileExportModal(false)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-bold">
+        ✕ Đóng
+      </button>
+    </div>
+
+    <div class="p-3 space-y-2 overflow-y-auto">
+      <!-- 1. DXF -->
+      <button type="button" onclick="exportMasterDXF(); toggleMobileExportModal(false);" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-sky-500/40 hover:border-sky-400 flex items-center gap-3 active:scale-98 transition">
+        <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl shrink-0">📐</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-extrabold text-white">AutoCAD DXF (Master Layout)</div>
+          <p class="text-[10px] text-slate-400">Đầy đủ lớp nét, mã vách, rãnh đan & khung tên BOM</p>
+        </div>
+        <span class="text-xs text-sky-400 font-bold shrink-0">Tải .DXF →</span>
+      </button>
+
+      <!-- 2. STEP -->
+      <button type="button" onclick="export3DSTEP(); toggleMobileExportModal(false);" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-amber-500/40 hover:border-amber-400 flex items-center gap-3 active:scale-98 transition">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0">⚙️</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-extrabold text-white">Mô Hình 3D STEP (AP214)</div>
+          <p class="text-[10px] text-slate-400">Mở trên Autodesk Inventor, Fusion 360, SolidWorks, FreeCAD</p>
+        </div>
+        <span class="text-xs text-amber-400 font-bold shrink-0">Tải .STEP →</span>
+      </button>
+
+      <!-- 3. PNG -->
+      <button type="button" onclick="exportMasterPNG(); toggleMobileExportModal(false);" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-indigo-500/40 hover:border-indigo-400 flex items-center gap-3 active:scale-98 transition">
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shrink-0">🖼️</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-extrabold text-white">Ảnh Bản Vẽ HiDPI (PNG 3x)</div>
+          <p class="text-[10px] text-slate-400">Độ phân giải siêu nét để gửi Zalo, duyệt mẫu</p>
+        </div>
+        <span class="text-xs text-indigo-400 font-bold shrink-0">Tải .PNG →</span>
+      </button>
+
+      <!-- 4. Metadata JSON -->
+      <button type="button" onclick="downloadDrawingMetadata(); toggleMobileExportModal(false);" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 flex items-center gap-3 active:scale-98 transition">
+        <div class="w-10 h-10 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xl shrink-0">📄</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-extrabold text-white">Dữ Liệu Thông Số (JSON)</div>
+          <p class="text-[10px] text-slate-400">Thông tin chi tiết từng tấm vách và rãnh đan</p>
+        </div>
+        <span class="text-xs text-slate-300 font-bold shrink-0">Tải JSON →</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       HIDDEN COMPATIBILITY PLACEHOLDERS
+       (Đảm bảo 100% không bao giờ gặp lỗi null element)
+       ======================================================================== -->
+  <div style="display:none!important">
+    <input id="inp_tY" type="number" value="4" />
+    <input id="inp_offY" type="number" value="5" />
+    <input id="inp_hVN" type="number" value="189" />
+    <input id="inp_desX" type="number" value="200" />
+    <input id="inp_desY" type="number" value="20" />
+    <select id="sel_divMode"><option value="cells">cells</option><option value="size">size</option></select>
+    <input id="chk_syncOffset" type="checkbox" checked />
+    <input id="chk_syncBorder" type="checkbox" checked />
+    <input id="chk_syncInner" type="checkbox" checked />
+    <span id="res_wallsCount"></span>
+    <span id="lbl_exportFilename"></span>
+    <span id="lbl_codeVD"></span>
+    <span id="lbl_codeVN"></span>
+    <span id="lbl_codeBD"></span>
+    <span id="lbl_codeBN"></span>
+    <span id="excelCollapsedSummary"></span>
+    <div id="orientationMatrixBody"></div>
+    <button id="btnToggleOriMatrix"></button>
+    <div id="measureToolbar">
+      <select id="dimMode"><option value="aligned">aligned</option></select>
+      <input id="dimSnap" type="checkbox" checked />
+      <input id="dimVisibleToggle" type="checkbox" checked />
+      <span id="measureInfo"></span>
+    </div>
+  </div>
+
+  <!-- Scripts in clean modular sequence with cache-busting -->
+  <script src="./js/geometry-engine.js?v=2.6"></script>
+  <script src="./js/excel-parser.js?v=2.6"></script>
+  <script src="./js/cad-renderer.js?v=2.6"></script>
+  <script src="./js/dxf-exporter.js?v=2.6"></script>
+  <script src="./js/step-exporter.js?v=2.6"></script>
+  <script src="./js/viewer-3d.js?v=2.6"></script>
+  <script src="./js/touch-tools.js?v=2.6"></script>
+  <script src="./js/app.js?v=2.6"></script>
 </body>
 </html>

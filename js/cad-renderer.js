@@ -8,6 +8,44 @@ function snapPx(val) {
   return Math.round(val) + 0.5;
 }
 
+function toUtf8ByteString(str) {
+  try {
+    return unescape(encodeURIComponent(str));
+  } catch (_) {
+    return str;
+  }
+}
+
+function drawQrCodeOnContext(ctx, elementId, x, y, size) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  if (!el.querySelector("canvas") && !el.querySelector("img")) {
+    if (typeof window.refreshDrawingQRCodes === "function") {
+      window.refreshDrawingQRCodes();
+    }
+  }
+
+  const cvs = el.querySelector("canvas");
+  const img = el.querySelector("img");
+
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x - 4, y - 4, size + 8, size + 8);
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(x - 4, y - 4, size + 8, size + 8);
+
+  if (cvs && cvs.width > 0 && cvs.height > 0) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(cvs, x, y, size, size);
+  } else if (img && img.complete && img.naturalWidth > 0) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, x, y, size, size);
+  }
+  ctx.restore();
+}
+
 // Thêm tham số ui vào hàm mũi tên
 function drawTechnicalArrow(ctx, x1, y1, x2, y2, color, text, offset, lineScale, ui) {
   if (!ui) ui = 1;
@@ -85,61 +123,6 @@ function drawTechnicalArrow(ctx, x1, y1, x2, y2, color, text, offset, lineScale,
   ctx.restore();
 }
 
-function computeMasterWorldLayout(g, item, plates) {
-  const rightColX = g.L + 150;
-  let curPlateTopDown = 0;
-  const platePlacements = [];
-
-  plates.forEach((p, idx) => {
-    const minSpacing = p.slots.length > 1
-      ? Math.min(...p.slots.slice(1).map((s, i) => Math.abs(s - p.slots[i])))
-      : 999;
-    const rotateCoords = p.slots.length > 5 || minSpacing < 38;
-    const extraLabelSpace = rotateCoords ? 48 : 30;
-    const blockHeaderSpace = 28;
-    const blockFooterSpace = 64;
-
-    const topY = g.W - curPlateTopDown - blockHeaderSpace;
-    const botY = topY - p.height;
-
-    platePlacements.push({
-      plate: p,
-      index: idx + 1,
-      x: rightColX,
-      topY,
-      botY,
-      width: p.length,
-      height: p.height,
-      rotateCoords
-    });
-
-    curPlateTopDown += blockHeaderSpace + p.height + extraLabelSpace + blockFooterSpace;
-  });
-
-  const maxPlateW = plates.length > 0 ? Math.max(...plates.map(p => Math.max(p.length, 480 + p.slots.length * 24))) : 650;
-  const totalWidth = Math.max(rightColX + maxPlateW + 120, 1600);
-
-  const leftLowestY = -75;
-  const rightLowestY = g.W - curPlateTopDown;
-  const contentLowestY = Math.min(leftLowestY, rightLowestY);
-
-  const bomTopY = contentLowestY - 135;
-  const bomRowCount = Math.max(4, plates.length + 2);
-  const bomBoxH = 180 + bomRowCount * 24;
-  const bomBotY = bomTopY - bomBoxH;
-
-  const contentMaxW = Math.max(rightColX + maxPlateW, totalWidth);
-  const paddingX = Math.max(110, contentMaxW * 0.08);
-  const paddingY = Math.max(110, Math.abs(bomBotY) * 0.08);
-
-  const frameLeft = -150 - paddingX * 0.3;
-  const frameRight = contentMaxW + paddingX;
-  const frameTop = g.W + 130 + paddingY * 0.4;
-  const frameBottom = bomBotY - paddingY;
-
-  return { rightColX, platePlacements, totalWidth, bomTopY, bomBoxH, bomBotY, frameLeft, frameRight, frameTop, frameBottom, worldW: frameRight - frameLeft, worldH: frameTop - frameBottom };
-}
-
 function renderMainCanvas() {
   if (window.APP_STATE.viewMode === "3d") {
     if (typeof rebuild3DScene === "function") rebuild3DScene();
@@ -181,7 +164,7 @@ function renderMainCanvas() {
   const masterLayout = computeMasterWorldLayout(g, item, plates);
   const layoutOnlyLeftPad = 125;
   const totalWorldW = window.APP_STATE.viewMode === "master" ? masterLayout.worldW : (g.L + layoutOnlyLeftPad + 85);
-  const totalWorldH = window.APP_STATE.viewMode === "master" ? masterLayout.worldH : (g.W + 170);
+  const totalWorldH = window.APP_STATE.viewMode === "master" ? masterLayout.worldH : (g.W + 200);
 
   const baseScale = Math.min((rectWidth - 60) / totalWorldW, (rectHeight - 60) / totalWorldH);
   const scale = Math.max(0.08, baseScale * window.APP_STATE.zoom);
@@ -192,7 +175,7 @@ function renderMainCanvas() {
   const drawW = totalWorldW * scale;
   const drawH = totalWorldH * scale;
   const originX = (rectWidth - drawW) / 2 + window.APP_STATE.panX + (window.APP_STATE.viewMode === "master" ? Math.abs(masterLayout.frameLeft) * scale : layoutOnlyLeftPad * scale);
-  const originY = (rectHeight - drawH) / 2 + window.APP_STATE.panY + (window.APP_STATE.viewMode === "master" ? (masterLayout.frameTop - g.W) * scale : 75 * scale);
+  const originY = (rectHeight - drawH) / 2 + window.APP_STATE.panY + (window.APP_STATE.viewMode === "master" ? (masterLayout.frameTop - g.W) * scale : 90 * scale);
 
   window.cadMeasureTransform = { originX, originY, scale, width: rectWidth, height: rectHeight };
   const toScreenX = (mmX) => originX + mmX * scale;
@@ -218,8 +201,8 @@ function renderMainCanvas() {
   ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
   ctx.font = `800 ${12 * ui}px 'JetBrains Mono', monospace`;
   ctx.textAlign = "left";
-  // Tọa độ Y -42 là thế giới (mm) nên giữ nguyên toScreenY(-42)
-  ctx.fillText(`I. MẶT BẰNG LAYOUT VÁCH NGĂN 2D (TỔNG: ${g.totalCells} Ô = ${g.nx}×${g.ny})`, toScreenX(0), toScreenY(-42));
+  // Tọa độ Y tiêu đề đặt cao hơn hẳn đường kích thước để không bao giờ đè chữ
+  ctx.fillText(`I. MẶT BẰNG LAYOUT VÁCH NGĂN 2D (TỔNG: ${g.totalCells} Ô = ${g.nx}×${g.ny})`, toScreenX(0), toScreenY(0) - 48 * ui);
 
   if (document.getElementById("chk_showBoxIn")?.checked && item) {
     const diffX = (item.boxIn.L - g.L) / 2;
@@ -360,7 +343,7 @@ function renderMainCanvas() {
     ctx.fillStyle = isPaper ? "#0284c7" : c.frame;
     ctx.font = `800 ${12 * ui}px 'JetBrains Mono', monospace`;
     ctx.textAlign = "left";
-    ctx.fillText("II. BẢN VẼ TÁCH CHI TIẾT TỪNG TẤM VÁCH & RÃNH ĐAN (MÀU RIÊNG)", toScreenX(masterLayout.rightColX), toScreenY(-42));
+    ctx.fillText("II. BẢN VẼ TÁCH CHI TIẾT TỪNG TẤM VÁCH & RÃNH ĐAN (MÀU RIÊNG)", toScreenX(masterLayout.rightColX), toScreenY(0) - 48 * ui);
 
     masterLayout.platePlacements.forEach(pp => {
       const p = pp.plate;
@@ -503,5 +486,17 @@ function renderMainCanvas() {
     ctx.restore();
   }
 
-  document.getElementById("zoomStatus").textContent = `Zoom: ${Math.round(window.APP_STATE.zoom * 100)}% • Super-HiDPI ${dpr.toFixed(2)}x`;
+  if (document.getElementById("zoomStatus")) {
+    document.getElementById("zoomStatus").textContent = `Zoom: ${Math.round(window.APP_STATE.zoom * 100)}% • Super-HiDPI ${dpr.toFixed(2)}x`;
+  }
+
+  if (typeof window.updateOnCanvasBadges === "function") {
+    window.updateOnCanvasBadges();
+  }
 }
+
+window.snapPx = snapPx;
+window.toUtf8ByteString = toUtf8ByteString;
+window.drawQrCodeOnContext = drawQrCodeOnContext;
+window.drawTechnicalArrow = drawTechnicalArrow;
+window.renderMainCanvas = renderMainCanvas;

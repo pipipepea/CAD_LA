@@ -236,3 +236,6 @@ function export3DSTEP() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+window.buildMasterStepContent = buildMasterStepContent;
+window.export3DSTEP = export3DSTEP;
